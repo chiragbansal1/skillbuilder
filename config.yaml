@@ -1,0 +1,21 @@
+# SkillForge configuration
+#
+# Swap providers by changing values here. No code changes required.
+
+llm:
+  # Today: claude (local dev). Tomorrow: firm_internal.
+  provider: claude
+  model: claude-opus-4-7
+
+  # Uncomment when switching to firm_internal:
+  # provider: firm_internal
+  # model: firm-gpt-4
+  # base_url: https://llm-gateway.yourfirm.com/v1
+  # api key comes from FIRM_LLM_API_KEY env var
+
+executor:
+  type: generic       # works with any LLM provider
+  max_turns: 10
+
+mcp:
+  type: local         # in-memory Python tools. Switch to "remote" when real MCP servers are available.
