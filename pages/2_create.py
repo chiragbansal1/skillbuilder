@@ -297,42 +297,13 @@ if draft and preview_col:
                 st.session_state["run_skill_id"] = saved_id
                 st.switch_page("pages/1_library.py")
         else:
-            col_save, col_test = st.columns(2)
-
-            with col_save:
-                if st.button("💾 Save skill", use_container_width=True):
-                    author = st.session_state.get("current_user", "unknown")
-                    try:
-                        skill_id = save_skill_to_db(
-                            draft, author, st.session_state["create_pending_files"]
-                        )
-                        st.session_state["create_saved_id"] = skill_id
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"Save failed: {e}")
-
-            with col_test:
-                if st.button("▶ Test it", use_container_width=True):
-                    st.session_state["create_testing"] = True
-
-        if st.session_state.get("create_testing"):
-            st.divider()
-            st.markdown("**Quick test**")
-            test_msg = st.text_input(
-                "Test message",
-                value="Hello! What can you help me with?",
-                key="create_test_input",
-            )
-            if st.button("Run test", key="create_run_test"):
-                with st.spinner("Running…"):
-                    output = ""
-                    try:
-                        for event in run_test(draft, test_msg):
-                            if event.type == "text":
-                                output += event.data["text"]
-                            elif event.type == "tool_call":
-                                output += f"\n\n*[Calling tool: {event.data['name']}]*\n\n"
-                    except Exception as e:
-                        output = f"Test error: {e}"
-                st.markdown("**Response:**")
-                st.markdown(output)
+            if st.button("💾 Save skill", use_container_width=True):
+                author = st.session_state.get("current_user", "unknown")
+                try:
+                    skill_id = save_skill_to_db(
+                        draft, author, st.session_state["create_pending_files"]
+                    )
+                    st.session_state["create_saved_id"] = skill_id
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Save failed: {e}")

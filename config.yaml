@@ -5,7 +5,7 @@
 llm:
   # Today: claude (local dev). Tomorrow: firm_internal.
   provider: claude
-  model: claude-opus-4-7
+  model: claude-sonnet-4-6
 
   # Uncomment when switching to firm_internal:
   # provider: firm_internal
