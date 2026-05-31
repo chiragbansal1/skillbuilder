@@ -149,21 +149,22 @@ Project scaffold, LLM protocol, Claude adapter, firm stub, config, smoke tests.
   related SkillVersion and SkillFile records
 - New CRUD: `delete_skill()`, `delete_skill_files()`
 
-### Phase 8: Polish + demo prep
-- Seed 3-4 polished sample skills (NDA summariser, meeting notes formatter,
-  internal wiki search, expense report helper)
-- Loading states, error handling
-- Record backup demo video
+### Phase 8: Polish + demo prep ✅ DONE
+- 4 polished sample skills: NDA Summariser, Firm Wiki Search, Meeting Notes
+  Formatter, Expense Report Helper — all auto-seeded on startup
+- Loading spinners on Create page (while LLM thinks) and Run page (while
+  executor runs)
+- Record backup demo video (manual — screen record the demo flow)
 - 3-4 pitch slides: problem, solution, architecture, live demo
 
 ## Demo script (for the hackathon presentation)
 
 Two-persona flow in 3-5 minutes:
-1. **Priya (legal, non-technical)** opens the app, types "I want to create a
+1. **Tyrion (legal, non-technical)** opens the app, types "I want to create a
    skill that drafts NDA review summaries." The skill-builder interview kicks
    in, walks her through questions, produces a working skill. She attaches a
    clause guide PDF and selects the `lookup_contract` tool.
-2. **Raj (sales)** opens the library, finds Priya's NDA skill, clicks "Run",
+2. **Jamie (sales)** opens the library, finds Tyrion's NDA skill, clicks "Run",
    uploads an NDA PDF, gets a structured summary enriched with contract history.
 3. **Bonus beat**: show the NDA skill calling `lookup_contract` to check
    counterparty history and surface a prior dispute note.

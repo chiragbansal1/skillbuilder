@@ -159,16 +159,17 @@ if user_input:
         full_response = ""
 
         try:
-            for event in executor.run(skill_content=skill_content, user_message=full_user_message):
-                if event.type == "text":
-                    full_response += event.data["text"]
-                    response_placeholder.markdown(full_response + "▌")
-                elif event.type == "tool_call":
-                    tool_log.caption(f"🔧 Calling `{event.data['name']}`…")
-                elif event.type == "tool_result":
-                    tool_log.caption(f"↩ Tool returned: {str(event.data['content'])[:120]}")
-                elif event.type == "error":
-                    st.error(event.data.get("message", "Unknown error"))
+            with st.spinner("Working…"):
+                for event in executor.run(skill_content=skill_content, user_message=full_user_message):
+                    if event.type == "text":
+                        full_response += event.data["text"]
+                        response_placeholder.markdown(full_response + "▌")
+                    elif event.type == "tool_call":
+                        tool_log.caption(f"🔧 Calling `{event.data['name']}`…")
+                    elif event.type == "tool_result":
+                        tool_log.caption(f"↩ Tool returned: {str(event.data['content'])[:120]}")
+                    elif event.type == "error":
+                        st.error(event.data.get("message", "Unknown error"))
 
             response_placeholder.markdown(full_response)
         except Exception as e:

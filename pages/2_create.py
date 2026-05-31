@@ -290,13 +290,14 @@ with chat_col:
         llm_msgs.append(Message(role="user", content=msg_content))
 
         # Call LLM
-        try:
-            llm = get_llm()
-            system_prompt = load_skill_builder_prompt()
-            response = llm.chat(messages=llm_msgs, system=system_prompt)
-            reply = response.content
-        except Exception as e:
-            reply = f"Sorry, I couldn't reach the AI: {e}\n\nMake sure your `.env` has a valid `ANTHROPIC_API_KEY`."
+        with st.spinner("Thinking…"):
+            try:
+                llm = get_llm()
+                system_prompt = load_skill_builder_prompt()
+                response = llm.chat(messages=llm_msgs, system=system_prompt)
+                reply = response.content
+            except Exception as e:
+                reply = f"Sorry, I couldn't reach the AI: {e}\n\nMake sure your `.env` has a valid `ANTHROPIC_API_KEY`."
 
         # Persist messages
         st.session_state["create_llm_messages"].append({"role": "user", "content": user_input})
