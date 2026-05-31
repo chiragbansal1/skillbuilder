@@ -29,3 +29,4 @@ env/
 Thumbs.db
 venv/
 streamlit.log
+skillforge.db
