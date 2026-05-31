@@ -23,13 +23,19 @@ class GenericExecutor:
         skill_content: str,
         user_message: str,
         mcp_servers: list[dict] | None = None,
+        history: list[dict] | None = None,
     ) -> Iterator[Event]:
         # Connect MCP servers if any (no-op for LocalToolsClient)
         if mcp_servers:
             self.mcp.connect_servers(mcp_servers)
         tools = self.mcp.list_tools_as_openai_schema()
 
-        messages: list[Message] = [Message(role="user", content=user_message)]
+        # Build message list: prior conversation history + current user message
+        messages: list[Message] = [
+            Message(role=m["role"], content=m["content"])
+            for m in (history or [])
+        ]
+        messages.append(Message(role="user", content=user_message))
 
         for _ in range(self.max_turns):
             response = self.llm.chat(

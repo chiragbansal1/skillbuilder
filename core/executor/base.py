@@ -20,4 +20,5 @@ class AgentExecutor(Protocol):
         skill_content: str,
         user_message: str,
         mcp_servers: list[dict] | None = None,
+        history: list[dict] | None = None,
     ) -> Iterator[Event]: ...

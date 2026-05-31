@@ -160,7 +160,8 @@ if user_input:
 
         try:
             with st.spinner("Working…"):
-                for event in executor.run(skill_content=skill_content, user_message=full_user_message):
+                prior = st.session_state["run_messages"][:-1]  # exclude the just-added user message
+                for event in executor.run(skill_content=skill_content, user_message=full_user_message, history=prior):
                     if event.type == "text":
                         full_response += event.data["text"]
                         response_placeholder.markdown(full_response + "▌")
