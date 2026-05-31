@@ -17,7 +17,7 @@ from core.mcp.factory import make_mcp_client
 from core.executor.factory import make_executor
 from core.types import Message
 from core.storage.database import get_session
-from core.storage.crud import create_skill, add_skill_file
+from core.storage.crud import create_skill, add_skill_file, get_skill_by_id, update_skill
 from core.files import extract_text, file_type_label
 from core.mcp.demo_tools import register_skill_tools, TOOL_REGISTRY
 
@@ -71,7 +71,8 @@ with st.sidebar:
     st.divider()
     if st.button("🗑 Start over", use_container_width=True):
         for key in ["create_messages", "create_llm_messages", "create_draft",
-                    "create_saved_id", "create_pending_files", "create_testing"]:
+                    "create_saved_id", "create_pending_files", "create_testing",
+                    "edit_skill_id"]:
             st.session_state.pop(key, None)
         st.rerun()
 
@@ -147,6 +148,15 @@ def save_skill_to_db(skill_content: str, author: str, pending_files: list[dict])
         session.close()
 
 
+def update_skill_in_db(skill_id: int, skill_content: str) -> int:
+    session = get_session()
+    try:
+        skill = update_skill(session=session, skill_id=skill_id, content=skill_content)
+        return skill.version
+    finally:
+        session.close()
+
+
 def run_test(skill_content: str, test_message: str):
     """Yield events from a quick test run of the drafted skill."""
     executor, mcp = get_executor_stack()
@@ -162,13 +172,43 @@ st.session_state.setdefault("create_messages", [
 st.session_state.setdefault("create_llm_messages", [])
 st.session_state.setdefault("create_draft", None)
 st.session_state.setdefault("create_saved_id", None)
-st.session_state.setdefault("create_pending_files", [])  # files staged before save
+st.session_state.setdefault("create_pending_files", [])
+
+# ── Edit mode — pre-load existing skill ──────────────────────────────────────
+
+edit_skill_id = st.session_state.get("edit_skill_id")
+
+if edit_skill_id and st.session_state["create_draft"] is None:
+    session = get_session()
+    try:
+        existing = get_skill_by_id(session, edit_skill_id)
+    finally:
+        session.close()
+
+    if existing:
+        edit_opening = (
+            f"You're editing **{existing.name}** (version {existing.version}). "
+            f"The current skill is shown on the right.\n\n"
+            f"Tell me what you'd like to change — I'll update the skill and show you a new draft."
+        )
+        st.session_state["create_messages"] = [{"role": "assistant", "content": edit_opening}]
+        st.session_state["create_llm_messages"] = [{
+            "role": "assistant",
+            "content": (
+                f"The user wants to edit an existing skill. Here is the current SKILL.md:\n\n"
+                f"```skill\n{existing.content}\n```\n\n"
+                f"Ask them what they'd like to change."
+            ),
+        }]
+        st.session_state["create_draft"] = existing.content
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
 
-st.title("✨ Create a Skill")
-st.caption("Answer a few questions and the AI will write the skill for you.")
+is_edit_mode = bool(edit_skill_id)
+
+st.title("✏️ Edit Skill" if is_edit_mode else "✨ Create a Skill")
+st.caption("Update the skill using the chat below." if is_edit_mode else "Answer a few questions and the AI will write the skill for you.")
 
 draft = st.session_state["create_draft"]
 
@@ -292,18 +332,26 @@ if draft and preview_col:
         saved_id = st.session_state.get("create_saved_id")
 
         if saved_id:
-            st.success(f"Saved! Skill id={saved_id}")
+            if is_edit_mode:
+                st.success(f"Updated to version {saved_id}!")
+            else:
+                st.success(f"Saved! Skill id={saved_id}")
             if st.button("Go to Library →", use_container_width=True):
-                st.session_state["run_skill_id"] = saved_id
+                st.session_state.pop("edit_skill_id", None)
                 st.switch_page("pages/1_library.py")
         else:
-            if st.button("💾 Save skill", use_container_width=True):
+            label = "💾 Save changes" if is_edit_mode else "💾 Save skill"
+            if st.button(label, use_container_width=True):
                 author = st.session_state.get("current_user", "unknown")
                 try:
-                    skill_id = save_skill_to_db(
-                        draft, author, st.session_state["create_pending_files"]
-                    )
-                    st.session_state["create_saved_id"] = skill_id
+                    if is_edit_mode:
+                        new_version = update_skill_in_db(edit_skill_id, draft)
+                        st.session_state["create_saved_id"] = new_version
+                    else:
+                        skill_id = save_skill_to_db(
+                            draft, author, st.session_state["create_pending_files"]
+                        )
+                        st.session_state["create_saved_id"] = skill_id
                     st.rerun()
                 except Exception as e:
                     st.error(f"Save failed: {e}")

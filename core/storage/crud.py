@@ -32,6 +32,20 @@ def list_skills(session: Session) -> list[Skill]:
     return session.exec(select(Skill)).all()
 
 
+def delete_skill(session: Session, skill_id: int) -> bool:
+    skill = session.get(Skill, skill_id)
+    if not skill:
+        return False
+    # Remove related records first to respect foreign keys
+    for sv in session.exec(select(SkillVersion).where(SkillVersion.skill_id == skill_id)).all():
+        session.delete(sv)
+    for sf in session.exec(select(SkillFile).where(SkillFile.skill_id == skill_id)).all():
+        session.delete(sf)
+    session.delete(skill)
+    session.commit()
+    return True
+
+
 def update_skill(session: Session, skill_id: int, content: str) -> Skill | None:
     skill = session.get(Skill, skill_id)
     if not skill:
