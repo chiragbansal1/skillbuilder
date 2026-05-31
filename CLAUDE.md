@@ -85,12 +85,12 @@ Project scaffold, LLM protocol, Claude adapter, firm stub, config, smoke tests.
 - Seeded 3 sample skills: Skill Builder, NDA Summariser, Firm Wiki Search
 - MCP factory (core/mcp/factory.py) added to match LLM and executor factory pattern
 
-### Phase 3: Basic skill execution
+### Phase 3: Basic skill execution ✅ DONE
 - Wire executor to run a skill from the DB by ID
 - CLI runner: `python -m scripts.run_skill --id 1 --message "..."`
 - Confirm end-to-end on a simple skill (no tools)
 
-### Phase 4: Web UI (Streamlit)
+### Phase 4: Web UI (Streamlit) ✅ DONE
 - Multi-page Streamlit app (app.py)
 - **Library page** (pages/1_library.py): table of skills, "Run" and "Edit" buttons
 - **Create page** (pages/2_create.py): chat UI for skill creation
@@ -98,7 +98,7 @@ Project scaffold, LLM protocol, Claude adapter, firm stub, config, smoke tests.
   the user interact with it via the executor
 - User picker in sidebar (dropdown of fake users — no real auth for the demo)
 
-### Phase 5: Skill creation flow (the headline feature)
+### Phase 5: Skill creation flow (the headline feature) ✅ DONE
 - The Create page uses the skill-builder skill (see skills/skill-builder/SKILL.md)
   as the system prompt
 - The skill-builder walks the user through an 8-stage interview:
@@ -106,19 +106,15 @@ Project scaffold, LLM protocol, Claude adapter, firm stub, config, smoke tests.
   Edge Cases → Name & Description
 - When the LLM outputs a final SKILL.md draft, parse it out and show a preview
 - "Save" writes to the DB. "Test" runs the skill with a sample prompt.
-- User can also paste existing skill content to update it (update mode)
+- File attachments: PDF, Excel, code, docs uploadable at creation and runtime
 
-### Phase 6: Tool execution + MCP
-- Skills can declare required MCP servers in their frontmatter:
-  ```yaml
-  mcp_servers:
-    - name: contracts_db
-      url: https://internal-mcp.yourfirm.com/contracts
-  ```
-- The executor passes these to the MCP client
-- For the demo: create at least one fake MCP server (e.g., a "firm wiki search")
-  using LocalToolsClient
-- When firm provides real MCP servers, swap to RemoteMCPClient
+### Phase 6: Tool execution + MCP ✅ DONE
+- Skills declare tools in frontmatter: `tools: [search_wiki, lookup_contract]`
+- `core/mcp/demo_tools.py` — TOOL_REGISTRY with fake implementations + `register_skill_tools()` helper
+- NDA Summariser wired to `lookup_contract` (fake contract history DB)
+- Firm Wiki Search wired to `search_wiki` (fake policy DB)
+- Run page and CLI both auto-register tools from skill frontmatter before execution
+- When firm provides real MCP servers, swap factory to RemoteMCPClient — nothing else changes
 
 ### Phase 7: Update flow + versioning
 - "Edit" button on library page opens a chat pre-loaded with the existing skill

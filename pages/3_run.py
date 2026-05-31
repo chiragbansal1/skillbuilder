@@ -11,6 +11,7 @@ from core.executor.factory import make_executor
 from core.storage.database import get_session
 from core.storage.crud import get_skill_by_id, get_skill_files, list_skills
 from core.files import extract_text
+from core.mcp.demo_tools import register_skill_tools
 
 st.set_page_config(page_title="Run — SkillForge", page_icon="▶", layout="wide")
 
@@ -94,14 +95,15 @@ st.divider()
 # ── Executor (cached per skill) ──────────────────────────────────────────────
 
 @st.cache_resource
-def get_executor():
+def get_stack():
     llm = make_llm_client()
     mcp = make_mcp_client()
-    return make_executor(llm=llm, mcp=mcp)
+    executor = make_executor(llm=llm, mcp=mcp)
+    return executor, mcp
 
 
 try:
-    executor = get_executor()
+    executor, mcp = get_stack()
 except Exception as e:
     st.error(f"Could not initialise the AI engine: {e}")
     st.info("Make sure your `.env` file contains a valid `ANTHROPIC_API_KEY`.")
@@ -117,7 +119,7 @@ for msg in st.session_state["run_messages"]:
         st.markdown(msg["content"])
 
 # File upload — sits above the chat input
-with st.expander("📎 Attach files to your message", expanded=False):
+with st.expander("📎 Attach files to your message", expanded=True):
     st.caption("Upload documents, code, PDFs, or spreadsheets to include with your next message.")
     run_uploads = st.file_uploader(
         "Upload files",
@@ -149,6 +151,7 @@ if user_input:
         st.markdown(display_user_message)
 
     skill_content = load_skill_content(selected_skill.id)
+    registered = register_skill_tools(mcp, skill_content)
 
     with st.chat_message("assistant"):
         response_placeholder = st.empty()

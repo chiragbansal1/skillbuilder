@@ -3,9 +3,8 @@ name: Firm Wiki Search
 description: Answers questions about firm policies and processes using the internal wiki
 author: system
 version: 1
-mcp_servers:
-  - name: search_wiki
-    url: local
+tools:
+  - search_wiki
 ---
 
 You are a helpful assistant for firm employees. You answer questions about

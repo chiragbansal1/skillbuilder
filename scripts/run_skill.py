@@ -16,6 +16,7 @@ from core.mcp.factory import make_mcp_client
 from core.executor.factory import make_executor
 from core.storage.database import get_session
 from core.storage.crud import get_skill_by_id, get_skill_files
+from core.mcp.demo_tools import register_skill_tools
 
 
 SAMPLE_SKILL = """
@@ -63,16 +64,6 @@ def load_skill_from_db(skill_id: int) -> tuple[str, str]:
 def build_stack():
     llm = make_llm_client()
     mcp = make_mcp_client()
-    mcp.register(
-        name="search_wiki",
-        description="Search the internal firm wiki for a policy or process.",
-        parameters={
-            "type": "object",
-            "properties": {"query": {"type": "string", "description": "Search query"}},
-            "required": ["query"],
-        },
-        fn=fake_wiki_search,
-    )
     executor = make_executor(llm=llm, mcp=mcp)
     return llm, mcp, executor
 
@@ -95,9 +86,13 @@ def main():
         user_message = args.message or "What's our holiday policy?"
         print(f"Skill:    {skill_name} (built-in sample)")
 
+    registered = register_skill_tools(mcp, skill_content)
+
     print(f"LLM:      {llm.__class__.__name__}")
     print(f"MCP:      {mcp.__class__.__name__}")
     print(f"Executor: {executor.__class__.__name__}")
+    if registered:
+        print(f"Tools:    {', '.join(registered)}")
     print("---")
     print(f"User: {user_message}\n")
 

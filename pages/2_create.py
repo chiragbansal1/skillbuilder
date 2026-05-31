@@ -19,6 +19,7 @@ from core.types import Message
 from core.storage.database import get_session
 from core.storage.crud import create_skill, add_skill_file
 from core.files import extract_text, file_type_label
+from core.mcp.demo_tools import register_skill_tools
 
 # ── Page config & sidebar ────────────────────────────────────────────────────
 
@@ -33,6 +34,31 @@ with st.sidebar:
         FAKE_USERS,
         index=FAKE_USERS.index(st.session_state["current_user"]),
     )
+    st.divider()
+    st.markdown("**📎 Attach reference files**")
+    st.caption("Upload docs, code, or data the skill should know about.")
+    sidebar_uploads = st.file_uploader(
+        "Attach files",
+        accept_multiple_files=True,
+        type=["py", "md", "txt", "json", "yaml", "csv", "pdf", "xlsx", "xls"],
+        key="create_sidebar_uploader",
+        label_visibility="collapsed",
+    )
+    if sidebar_uploads:
+        existing_names = {f["filename"] for f in st.session_state.get("create_pending_files", [])}
+        for uf in sidebar_uploads:
+            if uf.name not in existing_names:
+                from core.files import extract_text, file_type_label
+                text = extract_text(uf.name, uf.read())
+                st.session_state["create_pending_files"].append({
+                    "filename": uf.name,
+                    "file_type": file_type_label(uf.name),
+                    "content": text,
+                })
+                existing_names.add(uf.name)
+    if st.session_state.get("create_pending_files"):
+        for f in st.session_state["create_pending_files"]:
+            st.caption(f"📎 {f['filename']}")
     st.divider()
     if st.button("🗑 Start over", use_container_width=True):
         for key in ["create_messages", "create_llm_messages", "create_draft",
@@ -61,7 +87,8 @@ def get_llm():
 def get_executor_stack():
     llm = make_llm_client()
     mcp = make_mcp_client()
-    return make_executor(llm=llm, mcp=mcp)
+    executor = make_executor(llm=llm, mcp=mcp)
+    return executor, mcp
 
 
 def load_skill_builder_prompt() -> str:
@@ -113,7 +140,8 @@ def save_skill_to_db(skill_content: str, author: str, pending_files: list[dict])
 
 def run_test(skill_content: str, test_message: str):
     """Yield events from a quick test run of the drafted skill."""
-    executor = get_executor_stack()
+    executor, mcp = get_executor_stack()
+    register_skill_tools(mcp, skill_content)
     yield from executor.run(skill_content=skill_content, user_message=test_message)
 
 
