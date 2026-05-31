@@ -4,7 +4,7 @@ AgentExecutor protocol — runs a skill to completion, yielding events as they h
 Different executors can use different strategies (manual tool loop, native MCP
 connector, etc.) but they all expose the same interface so the UI stays simple.
 """
-from typing import Protocol, Iterator
+from typing import Protocol, Iterator, runtime_checkable
 from pydantic import BaseModel
 
 
@@ -13,6 +13,7 @@ class Event(BaseModel):
     data: dict = {}
 
 
+@runtime_checkable
 class AgentExecutor(Protocol):
     def run(
         self,

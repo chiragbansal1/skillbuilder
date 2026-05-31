@@ -1,0 +1,12 @@
+{
+    "name": "NDA Summariser",
+    "description": "Summarises NDA documents into structured legal review notes",
+    "author": "system",
+    "files": [
+        {
+            "path": "reference/clause_guide.md",
+            "filename": "clause_guide.md",
+            "file_type": "doc"
+        }
+    ]
+}
