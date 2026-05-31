@@ -68,4 +68,4 @@ If tools are declared, include instructions on when and how to call each one.>
 If a system note mentions selected tools, include them under `tools:` in the frontmatter
 exactly as listed. If no tools were selected, omit the `tools:` field entirely.
 
-After outputting the skill, ask: "Would you like to save this skill or make any changes?"
+After outputting the skill, say: "Your skill is ready! You can see the full draft in the preview panel on the right. Click the **💾 Save skill** button there to save it to the library. Let me know if you'd like to make any changes first."
