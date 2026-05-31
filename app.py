@@ -5,9 +5,9 @@ Renders the home/welcome page and the sidebar that persists across all pages.
 """
 import streamlit as st
 from shared import FAKE_USERS
-from core.storage.database import create_db_and_tables
+from scripts.seed_db import seed
 
-create_db_and_tables()
+seed()
 
 st.set_page_config(
     page_title="SkillForge",
