@@ -78,3 +78,17 @@ class FirmInternalClient:
             "FirmInternalClient.chat() is not yet implemented. "
             "Wire your firm's LLM API here — see ClaudeClient for a working reference."
         )
+
+    def chat_stream(
+        self,
+        messages: list[Message],
+        system: str | None = None,
+        tools: list[dict] | None = None,
+        max_tokens: int = 4096,
+    ):
+        # TODO: implement streaming for firm gateway.
+        # For OpenAI-compatible gateways, use stream=True and iterate chunks.
+        # Fall back to non-streaming for now:
+        response = self.chat(messages=messages, system=system, tools=tools, max_tokens=max_tokens)
+        yield ("chunk", response.content)
+        yield ("done", response)

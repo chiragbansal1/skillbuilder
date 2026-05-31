@@ -34,6 +34,32 @@ class ClaudeClient:
         resp = self.client.messages.create(**kwargs)
         return self._to_llm_response(resp)
 
+    def chat_stream(
+        self,
+        messages: list[Message],
+        system: str | None = None,
+        tools: list[dict] | None = None,
+        max_tokens: int = 4096,
+    ):
+        """
+        Stream text chunks as they arrive, then yield the final LLMResponse.
+        Yields: ("chunk", str) per text delta, then ("done", LLMResponse).
+        """
+        kwargs = {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "messages": self._to_anthropic_messages(messages),
+        }
+        if system:
+            kwargs["system"] = system
+        if tools:
+            kwargs["tools"] = self._to_anthropic_tools(tools)
+
+        with self.client.messages.stream(**kwargs) as stream:
+            for text in stream.text_stream:
+                yield ("chunk", text)
+            yield ("done", self._to_llm_response(stream.get_final_message()))
+
     # --- translation helpers -------------------------------------------------
 
     def _to_anthropic_messages(self, messages: list[Message]) -> list[dict]:

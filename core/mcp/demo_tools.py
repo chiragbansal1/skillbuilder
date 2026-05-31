@@ -75,6 +75,133 @@ def _lookup_contract(counterparty: str) -> str:
     return f"No prior contract history found for '{counterparty}'."
 
 
+def _get_employee_info(employee_name: str) -> str:
+    db = {
+        "tyrion": (
+            "Name: Tyrion Lannister | Role: Senior Legal Counsel | Team: Legal & Compliance | "
+            "Manager: Tywin Lannister | Start Date: June 10, 2026 | Office: London | "
+            "Grade: L5 | Employment Type: Full-time | "
+            "Key Responsibilities: Contract negotiation, NDA review, regulatory compliance, IP advisory. "
+            "Tools Access: LegalVault, ContractPro, Westlaw. "
+            "Pending Setup: Bar membership verification, security clearance (Level 2), DocuSign access. "
+            "First Week: Meet Cersei (Head of Legal) on Day 1, complete compliance training by Day 3, "
+            "shadow NDA review process by Day 5. "
+            "Perks: London transport allowance £150/month, home office stipend £500 one-time, "
+            "legal journal subscriptions covered."
+        ),
+        "jamie": (
+            "Name: Jamie Lannister | Role: Enterprise Sales Executive | Team: Enterprise Sales | "
+            "Manager: Tywin Lannister | Start Date: June 15, 2026 | Office: New York | "
+            "Grade: S4 | Employment Type: Full-time | "
+            "Key Responsibilities: Enterprise account management, new business development, "
+            "RFP responses, CRM pipeline management. "
+            "Tools Access: Salesforce, Gong, LinkedIn Sales Navigator, Tableau. "
+            "Pending Setup: Salesforce license assignment, Gong call recording consent, "
+            "corporate Amex card. "
+            "First Week: Sales bootcamp Day 1-2, shadow senior AE on 3 calls, "
+            "complete product certification by Day 5. "
+            "Perks: Sales commission plan (10% on new business), NYC commuter benefit $300/month, "
+            "phone allowance $80/month."
+        ),
+        "cersei": (
+            "Name: Cersei Lannister | Role: Head of Legal | Team: Legal & Compliance | "
+            "Manager: Robert Baratheon (CEO) | Start Date: March 1, 2019 | Office: London | "
+            "Grade: L8 | Employment Type: Full-time | "
+            "Key Responsibilities: Legal strategy, M&A oversight, board governance, "
+            "regulatory relationships, team leadership (12 reports). "
+            "Tools Access: All legal systems, board portal, M&A dataroom. "
+            "Direct Reports: Tyrion Lannister, Sansa Stark, Brienne of Tarth. "
+            "Perks: Executive package — private health, car allowance £800/month, "
+            "annual equity grant, executive coaching budget £5,000/year."
+        ),
+        "daenerys": (
+            "Name: Daenerys Targaryen | Role: VP of Product | Team: Product Management | "
+            "Manager: Robert Baratheon (CEO) | Start Date: January 15, 2024 | Office: Remote (Essos) | "
+            "Grade: P8 | Employment Type: Full-time | "
+            "Key Responsibilities: Product vision and roadmap, cross-functional leadership, "
+            "OKR setting, market strategy, partnerships. "
+            "Tools Access: Jira, Figma, Amplitude, Notion, all product dashboards. "
+            "Direct Reports: Jon Snow, Missandei, Grey Worm. "
+            "Perks: Full remote approved, home office budget $2,000/year, "
+            "international travel budget $15,000/year, equity (0.8% vested over 4 years)."
+        ),
+        "jon": (
+            "Name: Jon Snow | Role: Senior Product Manager | Team: Product Management | "
+            "Manager: Daenerys Targaryen | Start Date: September 1, 2025 | Office: Edinburgh | "
+            "Grade: P5 | Employment Type: Full-time | "
+            "Key Responsibilities: Skill execution product area, roadmap ownership, "
+            "user research, sprint planning, stakeholder alignment. "
+            "Tools Access: Jira, Confluence, Figma, Mixpanel, Notion. "
+            "Pending Setup: Figma seat, Amplitude access, product analytics dashboard. "
+            "First Week: Onboarding with Daenerys Day 1, product deep-dive sessions Day 2-3, "
+            "meet engineering lead (Sam) Day 4, first sprint planning Day 5. "
+            "Perks: Edinburgh flexible office access, learning budget £2,000/year."
+        ),
+        "arya": (
+            "Name: Arya Stark | Role: Senior Security Engineer | Team: Platform Engineering | "
+            "Manager: Harish Guragol | Start Date: April 5, 2026 | Office: Bangalore | "
+            "Grade: E6 | Employment Type: Full-time | "
+            "Key Responsibilities: Penetration testing, threat modelling, security reviews, "
+            "incident response, zero-trust architecture. "
+            "Tools Access: AWS Security Hub, Burp Suite, Splunk, PagerDuty, GitHub (admin). "
+            "Pending Setup: VPN certificate, HSM access, AWS IAM role assignment. "
+            "First Week: Security systems orientation Day 1, threat model review Day 2, "
+            "shadow on-call rotation Day 3-5. "
+            "Perks: Bug bounty participation allowed, security conference budget $3,000/year, "
+            "home lab equipment reimbursement up to $1,500."
+        ),
+        "sansa": (
+            "Name: Sansa Stark | Role: Legal Operations Manager | Team: Legal & Compliance | "
+            "Manager: Cersei Lannister | Start Date: July 20, 2023 | Office: London | "
+            "Grade: L4 | Employment Type: Full-time | "
+            "Key Responsibilities: Contract lifecycle management, legal ops tooling, "
+            "vendor management, process improvement, paralegal team oversight. "
+            "Tools Access: ContractPro, DocuSign, LegalVault, Asana. "
+            "Direct Reports: 3 paralegals. "
+            "Perks: London office perks, flexible working 2 days remote, "
+            "professional development budget £1,500/year."
+        ),
+        "sam": (
+            "Name: Samwell Tarly | Role: Engineering Manager | Team: Platform Engineering | "
+            "Manager: Harish Guragol | Start Date: February 10, 2022 | Office: Bangalore | "
+            "Grade: E7 | Employment Type: Full-time | "
+            "Key Responsibilities: Team leadership (8 engineers), technical roadmap, "
+            "architecture decisions, hiring, cross-team coordination. "
+            "Tools Access: All engineering systems, AWS console (admin), GitHub (org admin). "
+            "Direct Reports: Arya Stark, Grey Worm, Podrick Payne, 5 others. "
+            "Perks: Engineering conference budget $4,000/year, AWS certification reimbursement, "
+            "equity grant (refresher), management coaching sessions."
+        ),
+        "missandei": (
+            "Name: Missandei | Role: Head of People & Culture | Team: HR | "
+            "Manager: Robert Baratheon (CEO) | Start Date: May 1, 2021 | Office: London | "
+            "Grade: HR8 | Employment Type: Full-time | "
+            "Key Responsibilities: Talent acquisition strategy, L&D, DEI programmes, "
+            "compensation benchmarking, employee relations, culture initiatives. "
+            "Tools Access: Workday, Greenhouse, Culture Amp, LinkedIn Talent. "
+            "Direct Reports: 5 HR business partners. "
+            "Perks: Full executive package, DEI conference budget £3,000/year."
+        ),
+        "brienne": (
+            "Name: Brienne of Tarth | Role: Compliance Officer | Team: Legal & Compliance | "
+            "Manager: Cersei Lannister | Start Date: November 12, 2022 | Office: London | "
+            "Grade: L5 | Employment Type: Full-time | "
+            "Key Responsibilities: Regulatory compliance (FCA, GDPR), audit management, "
+            "policy enforcement, compliance training, incident reporting. "
+            "Tools Access: ComplyAdvantage, OneTrust, LegalVault, Workday. "
+            "Perks: ICA certification sponsorship, compliance conference budget £2,000/year."
+        ),
+    }
+    name = employee_name.lower()
+    for key, value in db.items():
+        if key in name:
+            return value
+    return (
+        f"No employee record found for '{employee_name}'. "
+        "Please check the spelling or contact HR (Missandei) directly."
+    )
+
+
 # ── Registry ──────────────────────────────────────────────────────────────────
 
 TOOL_REGISTRY: dict[str, dict] = {
@@ -104,6 +231,21 @@ TOOL_REGISTRY: dict[str, dict] = {
             "required": ["counterparty"],
         },
         "fn": _lookup_contract,
+    },
+    "get_employee_info": {
+        "name": "get_employee_info",
+        "description": "Look up employee details including role, team, manager, office, tools access, and onboarding info.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "employee_name": {
+                    "type": "string",
+                    "description": "First name or full name of the employee",
+                },
+            },
+            "required": ["employee_name"],
+        },
+        "fn": _get_employee_info,
     },
 }
 

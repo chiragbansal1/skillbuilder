@@ -37,15 +37,28 @@ class GenericExecutor:
         ]
         messages.append(Message(role="user", content=user_message))
 
-        for _ in range(self.max_turns):
-            response = self.llm.chat(
-                messages=messages,
-                system=skill_content,
-                tools=tools if tools else None,
-            )
+        use_streaming = hasattr(self.llm, "chat_stream")
 
-            if response.content:
-                yield Event(type="text", data={"text": response.content})
+        for _ in range(self.max_turns):
+            if use_streaming:
+                response = None
+                for chunk_type, data in self.llm.chat_stream(
+                    messages=messages,
+                    system=skill_content,
+                    tools=tools if tools else None,
+                ):
+                    if chunk_type == "chunk":
+                        yield Event(type="text", data={"text": data})
+                    elif chunk_type == "done":
+                        response = data
+            else:
+                response = self.llm.chat(
+                    messages=messages,
+                    system=skill_content,
+                    tools=tools if tools else None,
+                )
+                if response.content:
+                    yield Event(type="text", data={"text": response.content})
 
             if not response.tool_calls:
                 yield Event(type="done", data={"reason": "end_turn"})
