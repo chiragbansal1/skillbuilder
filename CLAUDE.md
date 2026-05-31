@@ -44,6 +44,20 @@ AgentExecutor (core/executor/base.py)
   └── Implementations: generic.py (works with any LLMClient)
 ```
 
+Storage layer (core/storage/):
+
+```
+models.py    — Skill, SkillVersion, SkillFile SQLModel table definitions
+database.py  — SQLite engine, create_db_and_tables(), get_session()
+crud.py      — create_skill, get_skill_by_id, list_skills, update_skill,
+               add_skill_file, get_skill_files, list_skill_versions
+```
+
+Each skill folder under skills/ contains:
+- `SKILL.md`   — the instructions (becomes the system prompt at runtime)
+- `skill.json` — manifest: name, description, author, attached files list
+- `reference/` — optional documentation, code, or tool files attached to the skill
+
 Config-driven via `config.yaml`. Factories in each layer read the config and
 return the right implementation.
 
@@ -61,13 +75,15 @@ adapter translates to its native format as needed.
 ### Phase 0-1: Foundation + LLM abstraction ✅ DONE
 Project scaffold, LLM protocol, Claude adapter, firm stub, config, smoke tests.
 
-### Phase 2: Skill storage (next)
+### Phase 2: Skill storage ✅ DONE
 - SQLite via SQLModel
-- `skills` table: id, name, description, content (SKILL.md text), author,
-  version, created_at, updated_at
-- `skill_versions` table for history
-- CRUD: create_skill, update_skill, list_skills, get_skill_by_id
-- Seed with 2-3 sample skills including the skill-builder skill itself
+- Three tables: `skills`, `skill_versions` (history), `skill_files` (attached docs/code)
+- CRUD: create_skill, update_skill, list_skills, get_skill_by_id,
+  add_skill_file, get_skill_files, list_skill_versions
+- Each skill folder has a `skill.json` manifest — seed script auto-discovers
+  all skills under skills/ with no hardcoding required
+- Seeded 3 sample skills: Skill Builder, NDA Summariser, Firm Wiki Search
+- MCP factory (core/mcp/factory.py) added to match LLM and executor factory pattern
 
 ### Phase 3: Basic skill execution
 - Wire executor to run a skill from the DB by ID
@@ -145,8 +161,17 @@ Pitch line: "GitHub for skills, but with a no-code builder."
 # Smoke test LLM connection
 python -m scripts.smoke_test_llm
 
+# Create DB tables and seed sample skills
+python -m scripts.seed_db
+
 # Run a sample skill end-to-end (with tool call)
 python -m scripts.run_skill
+
+# Run a skill from the DB by ID (Phase 3+)
+python -m scripts.run_skill --id 1 --message "Summarise this NDA: ..."
+
+# List all skills in the DB (Phase 3+)
+python -m scripts.list_skills
 
 # Launch Streamlit app (after Phase 4)
 streamlit run app.py

@@ -12,6 +12,7 @@ from sqlmodel import SQLModel, Field
 
 
 class Skill(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
     id: int | None = Field(default=None, primary_key=True)
     name: str
     description: str
@@ -23,6 +24,7 @@ class Skill(SQLModel, table=True):
 
 
 class SkillVersion(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
     id: int | None = Field(default=None, primary_key=True)
     skill_id: int = Field(foreign_key="skill.id")
     version: int                  # which version this snapshot is
@@ -31,6 +33,7 @@ class SkillVersion(SQLModel, table=True):
 
 
 class SkillFile(SQLModel, table=True):
+    __table_args__ = {"extend_existing": True}
     id: int | None = Field(default=None, primary_key=True)
     skill_id: int = Field(foreign_key="skill.id")
     filename: str                 # e.g. "nda_guidelines.md", "output_schema.json"
