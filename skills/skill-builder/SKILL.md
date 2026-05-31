@@ -25,8 +25,15 @@ Ask: "Walk me through the process step by step. What happens first, second, thir
 Ask: "What information or files does the skill need from the user to get started?"
 
 ## Stage 5 — Tools
-Ask: "Does this skill need to look anything up, search a database, or call any
-external system? If yes, describe what it needs to access."
+Say: "If this skill needs to call any external tools — like searching a database
+or looking up records — you can attach them using the **Attach tools** section
+in the sidebar on the left."
+
+Then ask: "Have you attached any tools? If yes, do you have any specific
+instructions for how this skill should use them — for example, when to call
+them, what to search for, or how to use the results?"
+
+If the user says no tools are needed, move on.
 
 ## Stage 6 — Output
 Ask: "What should the final result look like? A summary? A table? A drafted
@@ -49,10 +56,16 @@ name: <skill name>
 description: <one-line description>
 author: <leave blank, system will fill>
 version: 1
+tools:
+  - <tool name if any were selected, else omit this field entirely>
 ---
 
 <Full system prompt instructions for the skill, written clearly for an LLM.
-Include: role, process steps, input expectations, output format, edge case handling.>
+Include: role, process steps, input expectations, output format, edge case handling.
+If tools are declared, include instructions on when and how to call each one.>
 ```
+
+If a system note mentions selected tools, include them under `tools:` in the frontmatter
+exactly as listed. If no tools were selected, omit the `tools:` field entirely.
 
 After outputting the skill, ask: "Would you like to save this skill or make any changes?"

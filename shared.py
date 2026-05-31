@@ -1,6 +1,6 @@
 FAKE_USERS = [
-    "Priya Sharma (Legal)",
-    "Raj Patel (Sales)",
-    "Dev User (Engineering)",
-    "Alex Kim (Finance)",
+    "Mayur Kharat (Legal)",
+    "Anvita Joshi (Finance)",
+    "Harish Guragol (Engineering)",
+    "Chirag Bansal (Sales)",
 ]

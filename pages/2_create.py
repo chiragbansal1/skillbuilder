@@ -19,7 +19,7 @@ from core.types import Message
 from core.storage.database import get_session
 from core.storage.crud import create_skill, add_skill_file
 from core.files import extract_text, file_type_label
-from core.mcp.demo_tools import register_skill_tools
+from core.mcp.demo_tools import register_skill_tools, TOOL_REGISTRY
 
 # ── Page config & sidebar ────────────────────────────────────────────────────
 
@@ -34,6 +34,15 @@ with st.sidebar:
         FAKE_USERS,
         index=FAKE_USERS.index(st.session_state["current_user"]),
     )
+    st.divider()
+    st.markdown("**🔧 Attach tools**")
+    st.caption("Select tools this skill should be able to call. You can tell the AI any specific instructions for each tool during the interview.")
+    for tool_name, tool in TOOL_REGISTRY.items():
+        st.checkbox(
+            tool_name,
+            help=tool["description"],
+            key=f"create_tool_{tool_name}",
+        )
     st.divider()
     st.markdown("**📎 Attach reference files**")
     st.caption("Upload docs, code, or data the skill should know about.")
@@ -190,7 +199,20 @@ with chat_col:
             Message(role=m["role"], content=m["content"])
             for m in st.session_state["create_llm_messages"]
         ]
-        llm_msgs.append(Message(role="user", content=user_input))
+
+        # Append selected tools so the LLM includes them in the frontmatter
+        selected_tools = [
+            name for name in TOOL_REGISTRY
+            if st.session_state.get(f"create_tool_{name}")
+        ]
+        msg_content = user_input
+        if selected_tools:
+            msg_content += (
+                f"\n\n[System note: the user has selected these tools for this skill: "
+                f"{', '.join(selected_tools)}. Include them in the skill frontmatter as:\n"
+                f"tools:\n" + "".join(f"  - {t}\n" for t in selected_tools) + "]"
+            )
+        llm_msgs.append(Message(role="user", content=msg_content))
 
         # Call LLM
         try:
