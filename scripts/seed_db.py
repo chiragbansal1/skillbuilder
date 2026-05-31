@@ -37,12 +37,19 @@ def seed():
             manifest = json.loads((skill_dir / "skill.json").read_text(encoding="utf-8"))
             name = manifest["name"]
 
-            # Skip if already seeded
+            # Sync hidden flag if skill already exists, then skip content re-seed
             existing = session.exec(
                 select(Skill).where(Skill.name == name)
             ).first()
             if existing:
-                print(f"SKIP  {name} (already exists, id={existing.id})")
+                hidden = manifest.get("hidden", False)
+                if existing.hidden != hidden:
+                    existing.hidden = hidden
+                    session.add(existing)
+                    session.commit()
+                    print(f"SYNC  {name} (id={existing.id}) hidden={hidden}")
+                else:
+                    print(f"SKIP  {name} (already exists, id={existing.id})")
                 continue
 
             content = (skill_dir / "SKILL.md").read_text(encoding="utf-8")
