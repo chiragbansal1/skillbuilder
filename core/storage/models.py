@@ -19,6 +19,7 @@ class Skill(SQLModel, table=True):
     content: str                  # full SKILL.md text
     author: str
     version: int = 1
+    hidden: bool = False          # if True, excluded from Library and Run page
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 

@@ -16,8 +16,9 @@ def create_skill(
     description: str,
     content: str,
     author: str,
+    hidden: bool = False,
 ) -> Skill:
-    skill = Skill(name=name, description=description, content=content, author=author)
+    skill = Skill(name=name, description=description, content=content, author=author, hidden=hidden)
     session.add(skill)
     session.commit()
     session.refresh(skill)
@@ -28,8 +29,9 @@ def get_skill_by_id(session: Session, skill_id: int) -> Skill | None:
     return session.get(Skill, skill_id)
 
 
-def list_skills(session: Session) -> list[Skill]:
-    return session.exec(select(Skill)).all()
+def list_skills(session: Session, include_hidden: bool = False) -> list[Skill]:
+    statement = select(Skill) if include_hidden else select(Skill).where(Skill.hidden == False)
+    return session.exec(statement).all()
 
 
 def delete_skill(session: Session, skill_id: int) -> bool:

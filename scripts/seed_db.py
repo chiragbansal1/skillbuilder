@@ -53,6 +53,7 @@ def seed():
                 description=manifest["description"],
                 content=content,
                 author=manifest["author"],
+                hidden=manifest.get("hidden", False),
             )
             print(f"ADDED {skill.name} (id={skill.id})")
 
