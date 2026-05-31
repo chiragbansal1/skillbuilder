@@ -98,3 +98,10 @@ def add_skill_file(
 def get_skill_files(session: Session, skill_id: int) -> list[SkillFile]:
     statement = select(SkillFile).where(SkillFile.skill_id == skill_id)
     return session.exec(statement).all()
+
+
+def delete_skill_files(session: Session, skill_id: int) -> None:
+    """Remove all attached files for a skill — used before re-saving files on edit."""
+    for sf in session.exec(select(SkillFile).where(SkillFile.skill_id == skill_id)).all():
+        session.delete(sf)
+    session.commit()

@@ -17,7 +17,7 @@ from core.mcp.factory import make_mcp_client
 from core.executor.factory import make_executor
 from core.types import Message
 from core.storage.database import get_session
-from core.storage.crud import create_skill, add_skill_file, get_skill_by_id, update_skill
+from core.storage.crud import create_skill, add_skill_file, get_skill_by_id, get_skill_files, update_skill, delete_skill_files
 from core.files import extract_text, file_type_label
 from core.mcp.demo_tools import register_skill_tools, TOOL_REGISTRY
 
@@ -148,10 +148,20 @@ def save_skill_to_db(skill_content: str, author: str, pending_files: list[dict])
         session.close()
 
 
-def update_skill_in_db(skill_id: int, skill_content: str) -> int:
+def update_skill_in_db(skill_id: int, skill_content: str, pending_files: list[dict]) -> int:
     session = get_session()
     try:
         skill = update_skill(session=session, skill_id=skill_id, content=skill_content)
+        # Replace all attached files with the current pending list
+        delete_skill_files(session=session, skill_id=skill_id)
+        for f in pending_files:
+            add_skill_file(
+                session=session,
+                skill_id=skill_id,
+                filename=f["filename"],
+                file_type=f["file_type"],
+                content=f["content"],
+            )
         return skill.version
     finally:
         session.close()
@@ -182,6 +192,7 @@ if edit_skill_id and st.session_state["create_draft"] is None:
     session = get_session()
     try:
         existing = get_skill_by_id(session, edit_skill_id)
+        existing_files = get_skill_files(session, edit_skill_id) if existing else []
     finally:
         session.close()
 
@@ -202,13 +213,37 @@ if edit_skill_id and st.session_state["create_draft"] is None:
         }]
         st.session_state["create_draft"] = existing.content
 
+        # Pre-load existing attached files so user can review/remove them
+        st.session_state["create_pending_files"] = [
+            {"filename": f.filename, "file_type": f.file_type, "content": f.content}
+            for f in existing_files
+        ]
+
+        # Pre-check tool checkboxes based on existing frontmatter
+        meta = extract_frontmatter(existing.content)
+        for tool_name in meta.get("tools", []):
+            st.session_state[f"create_tool_{tool_name}"] = True
+
 
 # ── Layout ────────────────────────────────────────────────────────────────────
 
 is_edit_mode = bool(edit_skill_id)
 
-st.title("✏️ Edit Skill" if is_edit_mode else "✨ Create a Skill")
-st.caption("Update the skill using the chat below." if is_edit_mode else "Answer a few questions and the AI will write the skill for you.")
+if is_edit_mode:
+    col_title, col_new = st.columns([5, 2])
+    with col_title:
+        st.title("✏️ Edit Skill")
+        st.caption("Update the skill using the chat below.")
+    with col_new:
+        st.write("")
+        if st.button("✨ Start new skill instead", use_container_width=True):
+            for key in ["create_messages", "create_llm_messages", "create_draft",
+                        "create_saved_id", "create_pending_files", "edit_skill_id"]:
+                st.session_state.pop(key, None)
+            st.rerun()
+else:
+    st.title("✨ Create a Skill")
+    st.caption("Answer a few questions and the AI will write the skill for you.")
 
 draft = st.session_state["create_draft"]
 
@@ -337,7 +372,9 @@ if draft and preview_col:
             else:
                 st.success(f"Saved! Skill id={saved_id}")
             if st.button("Go to Library →", use_container_width=True):
-                st.session_state.pop("edit_skill_id", None)
+                for key in ["create_messages", "create_llm_messages", "create_draft",
+                            "create_saved_id", "create_pending_files", "edit_skill_id"]:
+                    st.session_state.pop(key, None)
                 st.switch_page("pages/1_library.py")
         else:
             label = "💾 Save changes" if is_edit_mode else "💾 Save skill"
@@ -345,7 +382,9 @@ if draft and preview_col:
                 author = st.session_state.get("current_user", "unknown")
                 try:
                     if is_edit_mode:
-                        new_version = update_skill_in_db(edit_skill_id, draft)
+                        new_version = update_skill_in_db(
+                            edit_skill_id, draft, st.session_state["create_pending_files"]
+                        )
                         st.session_state["create_saved_id"] = new_version
                     else:
                         skill_id = save_skill_to_db(
