@@ -289,15 +289,23 @@ with chat_col:
             )
         llm_msgs.append(Message(role="user", content=msg_content))
 
-        # Call LLM
-        with st.spinner("Thinking…"):
-            try:
-                llm = get_llm()
-                system_prompt = load_skill_builder_prompt()
-                response = llm.chat(messages=llm_msgs, system=system_prompt)
-                reply = response.content
-            except Exception as e:
-                reply = f"Sorry, I couldn't reach the AI: {e}\n\nMake sure your `.env` has a valid `ANTHROPIC_API_KEY`."
+        # Call LLM with streaming
+        reply = ""
+        try:
+            llm = get_llm()
+            system_prompt = load_skill_builder_prompt()
+            with st.chat_message("assistant"):
+                placeholder = st.empty()
+                for chunk_type, data in llm.chat_stream(messages=llm_msgs, system=system_prompt):
+                    if chunk_type == "chunk":
+                        reply += data
+                        placeholder.markdown(reply + "▌")
+                    elif chunk_type == "done":
+                        placeholder.markdown(reply)
+        except Exception as e:
+            reply = f"Sorry, I couldn't reach the AI: {e}\n\nMake sure your `.env` has a valid `ANTHROPIC_API_KEY`."
+            with st.chat_message("assistant"):
+                st.markdown(reply)
 
         # Persist messages
         st.session_state["create_llm_messages"].append({"role": "user", "content": user_input})
@@ -309,9 +317,6 @@ with chat_col:
         if new_draft:
             st.session_state["create_draft"] = new_draft
             st.session_state["create_saved_id"] = None
-
-        with st.chat_message("assistant"):
-            st.markdown(reply)
 
         st.rerun()
 
