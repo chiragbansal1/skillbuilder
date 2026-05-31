@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from core.llm.factory import make_llm_client
-from core.mcp.local_tools import LocalToolsClient
+from core.mcp.factory import make_mcp_client
 from core.executor.factory import make_executor
 
 
@@ -38,7 +38,7 @@ def fake_wiki_search(query: str) -> str:
 def main():
     # Build the stack from config
     llm = make_llm_client()
-    mcp = LocalToolsClient()
+    mcp = make_mcp_client()
     mcp.register(
         name="search_wiki",
         description="Search the internal firm wiki for a policy or process.",

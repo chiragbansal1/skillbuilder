@@ -21,7 +21,7 @@ def make_llm_client(config_path: str | Path = "config.yaml") -> LLMClient:
             model=cfg.get("model", "firm-default"),
             base_url=cfg.get("base_url"),
         )
-    else:
+    else:  ## Need to add new providers here as we integrate them, but the rest of the codebase can remain unchanged.
         raise ValueError(
             f"Unknown LLM provider: {provider}. "
             f"Add it to core/llm/factory.py."

@@ -80,7 +80,7 @@ class ClaudeClient:
                     "input_schema": fn["parameters"],
                 })
             else:
-                result.append(tool)
+                result.append(tool)   # Pass through other tool types without modification but future consider validating or transforming them as needed
         return result
 
     def _to_llm_response(self, resp) -> LLMResponse:
