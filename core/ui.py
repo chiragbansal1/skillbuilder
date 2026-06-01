@@ -382,7 +382,7 @@ def render_sidebar(active_page: str):
             if new_key != st.session_state["gemini_api_key"]:
                 st.session_state["gemini_api_key"] = new_key
                 st.rerun()
-            has_key = bool(st.session_state["gemini_api_key"])
+            has_key = bool(st.session_state["gemini_api_key"] or os.environ.get("GEMINI_API_KEY"))
             
         elif provider == "claude":
             new_key = st.text_input(
@@ -395,7 +395,7 @@ def render_sidebar(active_page: str):
             if new_key != st.session_state["anthropic_api_key"]:
                 st.session_state["anthropic_api_key"] = new_key
                 st.rerun()
-            has_key = bool(st.session_state["anthropic_api_key"])
+            has_key = bool(st.session_state["anthropic_api_key"] or os.environ.get("ANTHROPIC_API_KEY"))
             
         # Display Connection Status Badge
         if provider == "mock":
