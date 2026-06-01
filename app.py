@@ -61,14 +61,26 @@ with c3:
     )
 with c4:
     import os
-    is_offline = not os.environ.get("ANTHROPIC_API_KEY")
+    provider = st.session_state.get("llm_provider", "gemini")
+    gemini_key = st.session_state.get("gemini_api_key") or os.environ.get("GEMINI_API_KEY")
+    anthropic_key = st.session_state.get("anthropic_api_key") or os.environ.get("ANTHROPIC_API_KEY")
+    
+    if provider == "gemini":
+        is_offline = not gemini_key
+        status_label = "Gemini (Offline)" if is_offline else "Gemini (Connected)"
+    elif provider == "claude":
+        is_offline = not anthropic_key
+        status_label = "Claude (Offline)" if is_offline else "Claude (Connected)"
+    else:
+        is_offline = True
+        status_label = "Mock (Offline)"
+        
     status_color = "#fbbf24" if is_offline else "#34d399"
-    status_label = "Mock Fallback (Offline)" if is_offline else "Connected"
     st.markdown(
         f"""
         <div class="glass-card" style="text-align: center; padding: 1.2rem; margin-bottom: 0;">
             <p style="margin: 0; font-size: 0.8rem; color: #ca8a04; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">AI Engine Status</p>
-            <h2 style="margin: 0.5rem 0; font-size: 1.3rem; font-weight: 700; color: {status_color} !important; height: 3.3rem; display: flex; align-items: center; justify-content: center;">{status_label}</h2>
+            <h2 style="margin: 0.5rem 0; font-size: 1.2rem; font-weight: 700; color: {status_color} !important; height: 3.3rem; display: flex; align-items: center; justify-content: center;">{status_label}</h2>
         </div>
         """,
         unsafe_allow_html=True
