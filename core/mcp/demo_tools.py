@@ -139,7 +139,7 @@ def _get_employee_info(employee_name: str) -> str:
         ),
         "arya": (
             "Name: Arya Stark | Role: Senior Security Engineer | Team: Platform Engineering | "
-            "Manager: Harish Guragol | Start Date: April 5, 2026 | Office: Bangalore | "
+            "Manager: Joffrey Baratheon | Start Date: April 5, 2026 | Office: Bangalore | "
             "Grade: E6 | Employment Type: Full-time | "
             "Key Responsibilities: Penetration testing, threat modelling, security reviews, "
             "incident response, zero-trust architecture. "
@@ -163,7 +163,7 @@ def _get_employee_info(employee_name: str) -> str:
         ),
         "sam": (
             "Name: Samwell Tarly | Role: Engineering Manager | Team: Platform Engineering | "
-            "Manager: Harish Guragol | Start Date: February 10, 2022 | Office: Bangalore | "
+            "Manager: Joffrey Baratheon | Start Date: February 10, 2022 | Office: Bangalore | "
             "Grade: E7 | Employment Type: Full-time | "
             "Key Responsibilities: Team leadership (8 engineers), technical roadmap, "
             "architecture decisions, hiring, cross-team coordination. "
