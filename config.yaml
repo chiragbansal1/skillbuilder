@@ -3,9 +3,9 @@
 # Swap providers by changing values here. No code changes required.
 
 llm:
-  # Today: claude (local dev). Tomorrow: firm_internal.
-  provider: claude
-  model: claude-haiku-4-5-20251001
+  # Swapped to gemini as requested by user
+  provider: gemini
+  model: gemini-2.5-flash
 
   # Uncomment when switching to firm_internal:
   # provider: firm_internal

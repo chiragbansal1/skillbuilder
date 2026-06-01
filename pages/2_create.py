@@ -20,29 +20,43 @@ from core.storage.database import get_session
 from core.storage.crud import create_skill, add_skill_file, get_skill_by_id, get_skill_files, update_skill, delete_skill_files
 from core.files import extract_text, file_type_label
 from core.mcp.demo_tools import register_skill_tools, TOOL_REGISTRY
+from core.ui import render_sidebar
 
-# ── Page config & sidebar ────────────────────────────────────────────────────
+# ── Page config ──────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="Create — SkillForge", page_icon="✨", layout="wide")
 
+# Render premium sidebar (navigation, user selector, personas)
+render_sidebar("create")
+
+# Additional create-specific sidebar controls
 with st.sidebar:
-    st.title("⚡ SkillForge")
-    st.divider()
-    st.session_state.setdefault("current_user", FAKE_USERS[0])
-    st.session_state["current_user"] = st.selectbox(
-        "Signed in as",
-        FAKE_USERS,
-        index=FAKE_USERS.index(st.session_state["current_user"]),
-    )
     st.divider()
     st.markdown("**🔧 Attach tools**")
     st.caption("Select tools this skill should be able to call. You can tell the AI any specific instructions for each tool during the interview.")
-    for tool_name, tool in TOOL_REGISTRY.items():
-        st.checkbox(
-            tool_name,
-            help=tool["description"],
-            key=f"create_tool_{tool_name}",
-        )
+    
+    # Categorize tools into clean expanders
+    TOOL_GROUPS = {
+        "Core Wiki & HR Tools": ["search_wiki", "lookup_contract", "get_employee_info"],
+        "Financial Research": [k for k in TOOL_REGISTRY if k.startswith("research_")],
+        "Financial Analysis": [k for k in TOOL_REGISTRY if k.startswith("analyse_")],
+        "Financial Forecasting": [k for k in TOOL_REGISTRY if k.startswith("forecast_")],
+        "Financial Valuation": [k for k in TOOL_REGISTRY if k.startswith("valuation_")],
+        "Financial Risk Tools": [k for k in TOOL_REGISTRY if k.startswith("risk_")],
+        "Financial Reporting": [k for k in TOOL_REGISTRY if k.startswith("report_")]
+    }
+    
+    for group_name, tools in TOOL_GROUPS.items():
+        if tools: # Only render if group is not empty
+            with st.expander(f"📦 {group_name}", expanded=False):
+                for tool_name in tools:
+                    if tool_name in TOOL_REGISTRY:
+                        st.checkbox(
+                            tool_name,
+                            help=TOOL_REGISTRY[tool_name]["description"],
+                            key=f"create_tool_{tool_name}",
+                        )
+                        
     st.divider()
     st.markdown("**📎 Attach reference files**")
     st.caption("Upload docs, code, or data the skill should know about.")
@@ -59,7 +73,7 @@ with st.sidebar:
             if uf.name not in existing_names:
                 from core.files import extract_text, file_type_label
                 text = extract_text(uf.name, uf.read())
-                st.session_state["create_pending_files"].append({
+                st.session_state.setdefault("create_pending_files", []).append({
                     "filename": uf.name,
                     "file_type": file_type_label(uf.name),
                     "content": text,
@@ -69,7 +83,7 @@ with st.sidebar:
         for f in st.session_state["create_pending_files"]:
             st.caption(f"📎 {f['filename']}")
     st.divider()
-    if st.button("🗑 Start over", use_container_width=True):
+    if st.button("🗑 Start over", use_container_width=True, type="secondary" if hasattr(st, "button") else "primary"):
         for key in ["create_messages", "create_llm_messages", "create_draft",
                     "create_saved_id", "create_pending_files", "create_testing",
                     "edit_skill_id"]:
@@ -89,12 +103,12 @@ OPENING_MESSAGE = (
 
 
 @st.cache_resource
-def get_llm():
+def get_llm(provider, model, key):
     return make_llm_client()
 
 
 @st.cache_resource
-def get_executor_stack():
+def get_executor_stack(provider, model, key):
     llm = make_llm_client()
     mcp = make_mcp_client()
     executor = make_executor(llm=llm, mcp=mcp)
@@ -167,13 +181,6 @@ def update_skill_in_db(skill_id: int, skill_content: str, pending_files: list[di
         session.close()
 
 
-def run_test(skill_content: str, test_message: str):
-    """Yield events from a quick test run of the drafted skill."""
-    executor, mcp = get_executor_stack()
-    register_skill_tools(mcp, skill_content)
-    yield from executor.run(skill_content=skill_content, user_message=test_message)
-
-
 # ── Session state defaults ────────────────────────────────────────────────────
 
 st.session_state.setdefault("create_messages", [
@@ -232,7 +239,7 @@ is_edit_mode = bool(edit_skill_id)
 if is_edit_mode:
     col_title, col_new = st.columns([5, 2])
     with col_title:
-        st.title("✏️ Edit Skill")
+        st.markdown("<h1 class='main-header'>✏️ Edit Skill</h1>", unsafe_allow_html=True)
         st.caption("Update the skill using the chat below.")
     with col_new:
         st.write("")
@@ -242,8 +249,8 @@ if is_edit_mode:
                 st.session_state.pop(key, None)
             st.rerun()
 else:
-    st.title("✨ Create a Skill")
-    st.caption("Answer a few questions and the AI will write the skill for you.")
+    st.markdown("<h1 class='main-header'>✨ Create a Skill</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='margin-top: -1.2rem; color: #94a3b8 !important; font-weight: 400 !important; font-size: 1.1rem; margin-bottom: 2rem;'>Answer a few questions and the AI will write the skill frontmatter and prompt logic.</h3>", unsafe_allow_html=True)
 
 draft = st.session_state["create_draft"]
 
@@ -257,17 +264,25 @@ else:
 # ── Chat panel ────────────────────────────────────────────────────────────────
 
 with chat_col:
+    # Custom styled chat box
+    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     for msg in st.session_state["create_messages"]:
-        with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
+        bubble_class = "chat-bubble-user" if msg["role"] == "user" else "chat-bubble-assistant"
+        st.markdown(
+            f"""
+            <div class="{bubble_class}">
+                {msg["content"]}
+            </div>
+            """, 
+            unsafe_allow_html=True
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
 
     user_input = st.chat_input("Your answer…")
 
     if user_input:
         # Display user message immediately
         st.session_state["create_messages"].append({"role": "user", "content": user_input})
-        with st.chat_message("user"):
-            st.markdown(user_input)
 
         # Build LLM message history
         llm_msgs = [
@@ -292,20 +307,25 @@ with chat_col:
         # Call LLM with streaming
         reply = ""
         try:
-            llm = get_llm()
+            provider = st.session_state.get("llm_provider", "gemini")
+            key = st.session_state.get("gemini_api_key" if provider == "gemini" else "anthropic_api_key", "")
+            model = "gemini-2.5-flash" if provider == "gemini" else "claude-opus-4-7"
+            llm = get_llm(provider, model, key)
             system_prompt = load_skill_builder_prompt()
-            with st.chat_message("assistant"):
-                placeholder = st.empty()
-                for chunk_type, data in llm.chat_stream(messages=llm_msgs, system=system_prompt):
-                    if chunk_type == "chunk":
-                        reply += data
-                        placeholder.markdown(reply + "▌")
-                    elif chunk_type == "done":
-                        placeholder.markdown(reply)
+            
+            # Temporary UI container for streaming
+            placeholder = st.empty()
+            for chunk_type, data in llm.chat_stream(messages=llm_msgs, system=system_prompt):
+                if chunk_type == "chunk":
+                    reply += data
+                    placeholder.markdown(
+                        f"<div class='chat-bubble-assistant'>{reply}▌</div>", 
+                        unsafe_allow_html=True
+                    )
+                elif chunk_type == "done":
+                    placeholder.empty()
         except Exception as e:
-            reply = f"Sorry, I couldn't reach the AI: {e}\n\nMake sure your `.env` has a valid `ANTHROPIC_API_KEY`."
-            with st.chat_message("assistant"):
-                st.markdown(reply)
+            reply = f"Sorry, I couldn't reach the AI: {e}\n\nCheck your LLM provider settings in the sidebar."
 
         # Persist messages
         st.session_state["create_llm_messages"].append({"role": "user", "content": user_input})
@@ -328,7 +348,7 @@ if draft and preview_col:
         meta = extract_frontmatter(draft)
         skill_name = meta.get("name", "New Skill")
 
-        st.subheader(f"📄 {skill_name}")
+        st.markdown(f"### 📄 {skill_name}")
         st.caption(meta.get("description", ""))
         st.divider()
 
