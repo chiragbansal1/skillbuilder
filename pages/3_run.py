@@ -119,6 +119,9 @@ st.session_state.setdefault("run_messages", [])
 # Display existing chat messages
 for msg in st.session_state["run_messages"]:
     with st.chat_message(msg["role"]):
+        if "tool_logs" in msg and msg["tool_logs"]:
+            for log in msg["tool_logs"]:
+                st.markdown(log, unsafe_allow_html=True)
         st.markdown(msg["content"])
 
 # File attachment interface
@@ -161,9 +164,10 @@ if user_input:
 
     # Streaming assistant response
     with st.chat_message("assistant"):
-        response_placeholder = st.empty()
         tool_log = st.container()
+        response_placeholder = st.empty()
         full_response = ""
+        current_tool_logs = []
 
         try:
             with st.spinner("Processing analysis…"):
@@ -173,20 +177,11 @@ if user_input:
                         full_response += event.data["text"]
                         response_placeholder.markdown(full_response + "▌")
                     elif event.type == "tool_call":
-                        tool_log.markdown(
-                            f"<span class='custom-badge badge-primary'>🔧 Calling: {event.data['name']}</span>", 
-                            unsafe_allow_html=True
-                        )
+                        log_html = f"<span class='custom-badge badge-primary'>🔧 Calling: {event.data['name']}</span>"
+                        tool_log.markdown(log_html, unsafe_allow_html=True)
+                        current_tool_logs.append(log_html)
                     elif event.type == "tool_result":
-                        # Shorten preview
-                        content_str = str(event.data['content'])
-                        preview = content_str[:90] + "..." if len(content_str) > 90 else content_str
-                        # Escape html characters
-                        preview_esc = preview.replace("<", "&lt;").replace(">", "&gt;")
-                        tool_log.markdown(
-                            f"<span class='custom-badge badge-success'>↩ Output: {preview_esc}</span>", 
-                            unsafe_allow_html=True
-                        )
+                        pass
                     elif event.type == "error":
                         st.error(event.data.get("message", "Execution error"))
 
@@ -195,5 +190,9 @@ if user_input:
             full_response = f"Sorry, an error occurred during execution: {e}"
             response_placeholder.markdown(full_response)
 
-    st.session_state["run_messages"].append({"role": "assistant", "content": full_response})
+    st.session_state["run_messages"].append({
+        "role": "assistant", 
+        "content": full_response,
+        "tool_logs": current_tool_logs
+    })
     st.rerun()

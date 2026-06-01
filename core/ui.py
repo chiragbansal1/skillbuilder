@@ -141,31 +141,33 @@ def inject_premium_css():
                 border-color: rgba(202, 138, 4, 0.5) !important;
             }
 
-            /* ═══ Badges ═══ */
+            /* ═══ Badges (Claude-style Tool Log Indicators) ═══ */
             .custom-badge {
                 display: inline-flex;
                 align-items: center;
-                border-radius: 6px;
-                padding: 0.35rem 0.7rem;
-                font-size: 0.8rem !important; 
-                font-weight: 500;
-                margin-right: 0.5rem;
-                margin-bottom: 0.5rem;
+                border-radius: 4px;
+                padding: 0.15rem 0.4rem;
+                font-size: 0.72rem !important; 
+                font-family: 'ui-monospace', 'SFMono-Regular', monospace !important;
+                font-weight: 400;
+                margin-right: 0.4rem;
+                margin-bottom: 0.4rem;
+                letter-spacing: -0.01em;
             }
             .badge-primary {
-                background: rgba(202, 138, 4, 0.15);
-                color: #fef08a;
-                border: 1px solid rgba(202, 138, 4, 0.3);
+                background: rgba(202, 138, 4, 0.12) !important;
+                color: #fef08a !important;
+                border: 1px solid rgba(202, 138, 4, 0.25) !important;
             }
             .badge-success {
-                background: rgba(16, 185, 129, 0.15);
-                color: #6ee7b7;
-                border: 1px solid rgba(16, 185, 129, 0.3);
+                background: rgba(16, 185, 129, 0.12) !important;
+                color: #6ee7b7 !important;
+                border: 1px solid rgba(16, 185, 129, 0.25) !important;
             }
             .badge-secondary {
-                background: rgba(255, 255, 255, 0.08);
-                color: #cbd5e1;
-                border: 1px solid rgba(255, 255, 255, 0.15);
+                background: rgba(255, 255, 255, 0.04) !important;
+                color: #cbd5e1 !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
             }
 
             /* ═══ Persona Sidebar Items ═══ */
