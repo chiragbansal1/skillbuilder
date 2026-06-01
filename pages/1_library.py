@@ -39,36 +39,11 @@ for i, skill in enumerate(skills):
     initials = "".join([w[0].upper() for w in words[:2]])
     
     # Generate badges
-    badges_html = f"""
-    <div style="display: flex; gap: 0.5rem; margin: 0.5rem 0 1rem 0;">
-        <span class="custom-badge badge-primary">v{skill.version}</span>
-        <span class="custom-badge badge-success">Author: {skill.author}</span>
-        {"<span class='custom-badge badge-secondary'>MCP Powered</span>" if "tools:" in (skill.content or "") else ""}
-    </div>
-    """
+    badges_html = f"""<div style="display: flex; gap: 0.5rem; margin: 0.5rem 0 1rem 0;"><span class="custom-badge badge-primary">v{skill.version}</span><span class="custom-badge badge-success">Author: {skill.author}</span>{"<span class='custom-badge badge-secondary'>MCP Powered</span>" if "tools:" in (skill.content or "") else ""}</div>"""
     
     with col:
-        # We wrap the card layout in our custom glassmorphic styling
-        st.markdown(
-            f"""
-            <div class="glass-card" style="margin-bottom: 1.5rem;">
-                <div style="display: flex; align-items: center; margin-bottom: 0.75rem;">
-                    <div class="persona-avatar" style="width: 44px; height: 44px; font-size: 1.1rem; margin-right: 1rem;">
-                        {initials}
-                    </div>
-                    <div>
-                        <h4 style="margin: 0; font-size: 1.3rem; color: #ffffff !important;">{skill.name}</h4>
-                        <p style="margin: 0; font-size: 0.8rem; color: #64748b;">Created by {skill.author}</p>
-                    </div>
-                </div>
-                {badges_html}
-                <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.6; min-height: 50px;">
-                    {skill.description}
-                </p>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        html_content = f"""<div class="glass-card"><div style="display: flex; align-items: center; margin-bottom: 0.75rem;"><div class="persona-avatar">{initials}</div><div><h4 style="margin: 0;">{skill.name}</h4><p style="margin: 0; font-size: 0.8rem; color: #64748b;">Created by {skill.author}</p></div></div>{badges_html}<p style="min-height: 50px; margin: 0.5rem 0 0 0;">{skill.description}</p></div>"""
+        st.markdown(html_content, unsafe_allow_html=True)
         
         # Action buttons directly below the card
         c_run, c_edit, c_del = st.columns([2, 1, 1])

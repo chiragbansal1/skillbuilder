@@ -77,13 +77,13 @@ initials = "".join([w[0].upper() for w in words[:2]])
 # Render Active Persona Header
 st.markdown(
     f"""
-    <div style="display: flex; align-items: center; background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); padding: 1.2rem; border-radius: 16px; margin-bottom: 2rem;">
-        <div class="persona-avatar" style="width: 50px; height: 50px; font-size: 1.25rem; margin-right: 1.25rem;">
+    <div class="glass-card" style="display: flex; align-items: center; margin-bottom: 2rem; padding: 1.2rem !important;">
+        <div class="persona-avatar" style="margin-right: 1.25rem;">
             {initials}
         </div>
         <div>
-            <h2 style="margin: 0; font-size: 1.5rem; color: #ffffff !important;">{selected_skill.name}</h2>
-            <p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: #94a3b8;">{selected_skill.description} • Created by <b>{selected_skill.author}</b></p>
+            <h4 style="margin: 0;">{selected_skill.name}</h4>
+            <p style="margin: 0.2rem 0 0 0;">{selected_skill.description} • Created by <b>{selected_skill.author}</b></p>
         </div>
     </div>
     """,

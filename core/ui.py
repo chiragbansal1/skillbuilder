@@ -12,272 +12,287 @@ def inject_premium_css():
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
         <style>
-            /* Global typography */
+            /* ═══ Global Theme: Champagne & Obsidian (Luxury Finance) ═══ */
             html, body, [class*="css"], .stApp {
-                font-family: 'Inter', sans-serif;
-                background-color: #0c0f16 !important;
-                color: #e2e8f0;
+                font-family: 'Inter', -apple-system, sans-serif;
+                background: #000000 !important; /* Pure Obsidian Black */
+                color: #cbd5e1;
+                font-size: 16px !important;
             }
             
+            /* Clean Streamlit Header */
+            .stApp > header {
+                background: transparent !important;
+            }
+
+            /* Make general markdown text highly readable and clean */
+            div.stMarkdown p {
+                font-size: 1.05rem !important;
+                line-height: 1.65 !important;
+                color: #cbd5e1 !important;
+            }
+
+            /* ═══ Typography ═══ */
             h1, h2, h3, h4, h5, h6 {
                 font-family: 'Outfit', sans-serif !important;
-                font-weight: 600 !important;
-                letter-spacing: -0.02em;
+                font-weight: 500 !important;
+                letter-spacing: -0.01em;
                 color: #ffffff !important;
             }
-            
-            /* Main header gradient */
             .main-header {
-                background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #4338ca 100%);
+                font-weight: 700 !important;
+                font-size: 2.8rem !important; 
+                margin-bottom: 0.8rem;
+                /* Soft Champagne Gold text gradient */
+                background: linear-gradient(135deg, #fef08a 0%, #ca8a04 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
-                font-weight: 800;
-                font-size: 3rem !important;
-                margin-bottom: 0.5rem;
+                text-shadow: 0 2px 10px rgba(0,0,0,0.5); 
             }
-            
-            /* Sidebar styling */
+            .main-subheader {
+                margin-top: -1.2rem !important;
+                color: #94a3b8 !important; 
+                font-weight: 400 !important;
+                font-size: 1.15rem !important;
+                margin-bottom: 2.0rem !important;
+                display: block;
+            }
+
+            /* ═══ Sidebar ═══ */
             [data-testid="stSidebar"] {
-                background-color: #07090e !important;
-                border-right: 1px solid #1e293b !important;
+                background: #0f1016 !important;
+                border-right: 1px solid rgba(202, 138, 4, 0.15) !important;
                 padding-top: 1rem;
             }
             
-            /* Glassmorphic cards */
+            [data-testid="stSidebar"] .stMarkdown p, 
+            [data-testid="stSidebar"] .stCheckbox label,
+            [data-testid="stSidebar"] .stRadio label {
+                font-size: 1.0rem !important;
+                color: #94a3b8 !important;
+            }
+
+            [data-testid="stSidebar"] .stButton>button {
+                background: rgba(255, 255, 255, 0.02) !important;
+                border: 1px solid rgba(202, 138, 4, 0.2) !important;
+                color: #fef08a !important;
+                border-radius: 8px !important;
+                font-size: 0.95rem !important;
+                transition: all 0.2s ease !important;
+            }
+            [data-testid="stSidebar"] .stButton>button:hover {
+                background: rgba(202, 138, 4, 0.1) !important;
+                border-color: rgba(202, 138, 4, 0.4) !important;
+            }
+
+            /* ═══ Obsidian Cards with Champagne Gold borders ═══ */
             .glass-card {
-                background: rgba(30, 41, 59, 0.45);
-                backdrop-filter: blur(12px);
-                -webkit-backdrop-filter: blur(12px);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 16px;
-                padding: 1.5rem;
-                margin-bottom: 1.2rem;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: #09090b !important;
+                border: 1px solid rgba(202, 138, 4, 0.15) !important; /* Gold border */
+                border-radius: 12px !important;
+                padding: 1.8rem !important;
+                margin-bottom: 1.5rem !important;
+                transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 
+                            0 4px 12px rgba(0, 0, 0, 0.5) !important;
             }
-            
             .glass-card:hover {
-                transform: translateY(-2px);
-                border-color: rgba(99, 102, 241, 0.4);
-                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(99, 102, 241, 0.1);
+                transform: translateY(-2px) !important;
+                background: #111115 !important;
+                border-color: rgba(202, 138, 4, 0.4) !important; /* Brighter gold border */
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 
+                            0 12px 25px rgba(0, 0, 0, 0.6) !important;
             }
-            
-            /* Badges */
-            .custom-badge {
-                display: inline-flex;
-                align-items: center;
-                border-radius: 9999px;
-                padding: 0.25rem 0.75rem;
-                font-size: 0.75rem;
-                font-weight: 500;
-                line-height: 1;
-                margin-right: 0.5rem;
-                margin-bottom: 0.5rem;
+            .glass-card h4 {
+                font-size: 1.4rem !important; 
             }
-            
-            .badge-primary {
-                background-color: rgba(99, 102, 241, 0.15);
-                color: #a5b4fc;
-                border: 1px solid rgba(99, 102, 241, 0.3);
+            .glass-card p {
+                font-size: 1.0rem !important; 
+                color: #94a3b8 !important;
             }
-            
-            .badge-success {
-                background-color: rgba(16, 185, 129, 0.15);
-                color: #34d399;
-                border: 1px solid rgba(16, 185, 129, 0.3);
-            }
-            
-            .badge-secondary {
-                background-color: rgba(148, 163, 184, 0.15);
-                color: #cbd5e1;
-                border: 1px solid rgba(148, 163, 184, 0.3);
-            }
-            
-            /* Premium buttons */
+
+            /* ═══ Luxury Gold Buttons ═══ */
             .stButton>button {
-                background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%) !important;
+                background: linear-gradient(135deg, #ca8a04 0%, #854d0e 100%) !important; /* Champagne/Amber gradient */
                 color: #ffffff !important;
                 border: none !important;
                 border-radius: 8px !important;
-                padding: 0.5rem 1.25rem !important;
-                font-weight: 500 !important;
-                transition: all 0.2s !important;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+                padding: 0.7rem 1.5rem !important;
+                font-weight: 600 !important;
+                font-size: 1.0rem !important; 
+                transition: all 0.2s ease !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 
+                            0 4px 12px rgba(202, 138, 4, 0.3) !important;
             }
-            
             .stButton>button:hover {
+                background: linear-gradient(135deg, #eab308 0%, #a16207 100%) !important;
                 transform: translateY(-1px) !important;
-                box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3), 0 4px 6px -2px rgba(99, 102, 241, 0.1) !important;
-                background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 
+                            0 6px 15px rgba(202, 138, 4, 0.4) !important;
             }
-            
-            .stButton>button:active {
-                transform: translateY(1px) !important;
-            }
-            
-            /* Custom secondary or delete buttons */
             .stButton>button[kind="secondary"] {
-                background: rgba(30, 41, 59, 0.7) !important;
-                color: #e2e8f0 !important;
-                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                background: rgba(255, 255, 255, 0.05) !important;
+                color: #fef08a !important;
+                border: 1px solid rgba(202, 138, 4, 0.3) !important;
+                box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
             }
-            
             .stButton>button[kind="secondary"]:hover {
-                background: rgba(51, 65, 85, 0.7) !important;
-                border-color: rgba(255, 255, 255, 0.2) !important;
+                background: rgba(202, 138, 4, 0.1) !important;
+                border-color: rgba(202, 138, 4, 0.5) !important;
             }
-            
-            /* Persona item list in sidebar */
+
+            /* ═══ Badges ═══ */
+            .custom-badge {
+                display: inline-flex;
+                align-items: center;
+                border-radius: 6px;
+                padding: 0.35rem 0.7rem;
+                font-size: 0.8rem !important; 
+                font-weight: 500;
+                margin-right: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            .badge-primary {
+                background: rgba(202, 138, 4, 0.15);
+                color: #fef08a;
+                border: 1px solid rgba(202, 138, 4, 0.3);
+            }
+            .badge-success {
+                background: rgba(16, 185, 129, 0.15);
+                color: #6ee7b7;
+                border: 1px solid rgba(16, 185, 129, 0.3);
+            }
+            .badge-secondary {
+                background: rgba(255, 255, 255, 0.08);
+                color: #cbd5e1;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+            }
+
+            /* ═══ Persona Sidebar Items ═══ */
             .persona-item {
                 display: flex;
                 align-items: center;
-                padding: 0.75rem 1rem;
-                border-radius: 12px;
+                padding: 0.8rem 0.9rem; 
+                border-radius: 8px;
                 margin-bottom: 0.5rem;
                 cursor: pointer;
                 border: 1px solid transparent;
+                background-color: transparent;
                 transition: all 0.2s ease;
-                background-color: rgba(30, 41, 59, 0.2);
             }
-            
             .persona-item:hover {
-                background-color: rgba(99, 102, 241, 0.1);
-                border-color: rgba(99, 102, 241, 0.2);
+                background-color: rgba(255, 255, 255, 0.05);
             }
-            
             .persona-active {
-                background-color: rgba(99, 102, 241, 0.15) !important;
-                border-color: rgba(99, 102, 241, 0.4) !important;
-                box-shadow: inset 0 0 12px rgba(99, 102, 241, 0.05);
+                background-color: rgba(202, 138, 4, 0.15) !important;
+                border-color: rgba(202, 138, 4, 0.3) !important;
             }
-            
             .persona-avatar {
-                width: 38px;
+                width: 38px; 
                 height: 38px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #6366f1 0%, #a5b4fc 100%);
+                border-radius: 8px;
+                background: linear-gradient(135deg, #eab308, #854d0e);
                 color: white;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-family: 'Outfit', sans-serif;
                 font-weight: 600;
-                font-size: 0.9rem;
-                margin-right: 0.75rem;
-                box-shadow: 0 4px 10px rgba(99, 102, 241, 0.25);
+                font-size: 1.0rem;
+                margin-right: 0.9rem;
                 flex-shrink: 0;
+                box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 5px rgba(0,0,0,0.3);
             }
-            
-            .persona-details {
-                flex-grow: 1;
-                min-width: 0;
-            }
-            
             .persona-name {
-                font-family: 'Outfit', sans-serif;
-                font-size: 0.9rem;
-                font-weight: 500;
+                font-family: 'Inter', sans-serif;
+                font-size: 1.0rem; 
+                font-weight: 600;
                 color: #ffffff;
-                margin-bottom: 0.1rem;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                margin-bottom: 0.15rem;
             }
-            
             .persona-desc {
-                font-size: 0.75rem;
+                font-size: 0.85rem; 
                 color: #94a3b8;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
             }
-            
-            /* Custom chat styling */
-            .chat-container {
-                display: flex;
-                flex-direction: column;
-                gap: 1.5rem;
-                margin-bottom: 2rem;
-            }
-            
-            .chat-bubble-user {
-                background-color: #1e1b4b;
-                border: 1px solid rgba(99, 102, 241, 0.2);
-                border-radius: 16px 16px 4px 16px;
-                padding: 1rem 1.25rem;
-                align-self: flex-end;
-                max-width: 80%;
-                color: #f1f5f9;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            }
-            
-            .chat-bubble-assistant {
-                background-color: rgba(30, 41, 59, 0.6);
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                border-radius: 16px 16px 16px 4px;
-                padding: 1rem 1.25rem;
-                align-self: flex-start;
-                max-width: 85%;
-                color: #f1f5f9;
-                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-            }
-            
-            /* Code editor or markdown code display */
+
+            /* ═══ Code & Chat ═══ */
             code {
-                font-family: 'Fira Code', monospace !important;
-                font-size: 0.85rem !important;
-                background-color: #0a0d14 !important;
-                color: #e2e8f0 !important;
-                padding: 0.15rem 0.35rem !important;
-                border-radius: 4px !important;
-            }
-            
-            pre {
-                background-color: #07090e !important;
-                border: 1px solid rgba(255, 255, 255, 0.05) !important;
-                border-radius: 10px !important;
-                padding: 1rem !important;
-            }
-            
-            pre code {
-                padding: 0 !important;
-                background-color: transparent !important;
-            }
-
-            /* Customizing Streamlit's base elements */
-            .stPageLink {
-                background: transparent !important;
-                border: none !important;
-                transition: all 0.2s !important;
-                padding: 0.5rem 0.75rem !important;
-                border-radius: 8px !important;
-            }
-            
-            .stPageLink:hover {
+                font-family: 'ui-monospace', 'SFMono-Regular', monospace !important;
+                font-size: 0.9rem !important; 
                 background: rgba(255, 255, 255, 0.05) !important;
+                color: #fef08a !important;
+                padding: 0.2rem 0.4rem !important;
+                border-radius: 4px !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
             }
-
-            /* Offline badge */
-            .offline-badge {
-                background: rgba(245, 158, 11, 0.1);
-                border: 1px solid rgba(245, 158, 11, 0.3);
-                color: #fbbf24;
-                padding: 0.35rem 0.75rem;
-                border-radius: 8px;
+            pre {
+                background: rgba(0, 0, 0, 0.3) !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                border-radius: 10px !important;
+                padding: 1.2rem !important;
+                box-shadow: inset 0 2px 10px rgba(0,0,0,0.2);
+            }
+            /* ═══ Native Streamlit Chat Message Styling ═══ */
+            [data-testid="stChatMessage"] {
+                background-color: rgba(255, 255, 255, 0.03) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 12px !important;
+                padding: 1.0rem 1.2rem !important;
+                margin-bottom: 0.8rem !important;
+                color: #e2e8f0 !important;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+            }
+            /* User Chat Message - Champagne gold border/tint */
+            [data-testid="stChatMessage"]:has(img[alt="user"]),
+            [data-testid="stChatMessage"]:has([data-testid="stChatMessageAvatarUser"]) {
+                background-color: rgba(202, 138, 4, 0.06) !important;
+                border-color: rgba(202, 138, 4, 0.25) !important;
+            }
+            [data-testid="stChatMessage"] p {
+                font-size: 1.0rem !important;
+                line-height: 1.55 !important;
+                color: #e2e8f0 !important;
+            }
+            
+            /* Inputs */
+            .stTextInput input, .stTextArea textarea, .stSelectbox select {
+                background: rgba(0, 0, 0, 0.25) !important;
+                border: 1px solid rgba(202, 138, 4, 0.2) !important;
+                border-radius: 8px !important;
+                color: #f8fafc !important;
+                font-size: 1.05rem !important;
+                padding: 0.75rem 1rem !important;
+                box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+            }
+            .stTextInput input:focus, .stTextArea textarea:focus {
+                border-color: #ca8a04 !important;
+                background: rgba(0, 0, 0, 0.4) !important;
+                box-shadow: inset 0 2px 5px rgba(0,0,0,0.3), 0 0 0 2px rgba(202,138,4,0.2) !important;
+            }
+            
+            /* ═══ Status Badges ═══ */
+            .offline-badge, .live-badge {
+                padding: 0.4rem 0.8rem;
+                border-radius: 6px;
                 font-size: 0.8rem;
                 font-weight: 500;
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                margin-bottom: 1.5rem;
+                gap: 0.4rem;
+                margin-bottom: 1rem;
             }
-            .offline-dot {
-                width: 8px;
-                height: 8px;
-                background-color: #f59e0b;
-                border-radius: 50%;
-                display: inline-block;
-                box-shadow: 0 0 8px #f59e0b;
+            .offline-badge {
+                background: rgba(245, 158, 11, 0.1);
+                border: 1px solid rgba(245, 158, 11, 0.2);
+                color: #fbbf24;
             }
+            .live-badge {
+                background: rgba(16, 185, 129, 0.1);
+                border: 1px solid rgba(16, 185, 129, 0.2);
+                color: #34d399;
+            }
+            .offline-dot { width: 8px; height: 8px; background: #f59e0b; border-radius: 50%; }
+            .live-dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px rgba(16, 185, 129, 0.5); }
         </style>
         """,
         unsafe_allow_html=True

@@ -125,39 +125,31 @@ class MockLLMClient:
 
             if "wall street" in name.lower() or "finance" in name.lower() or "financial" in name.lower() or "analyst" in name.lower():
                 name = "Wall Street AI Analyst"
-                desc = "Premium equity research, valuation & risk analysis with 18 MCP tools"
+                desc = "Premium equity research, valuation & risk analysis with 10 core MCP tools"
                 
                 skill_code = """---
 name: Wall Street AI Analyst
-description: Premium equity research, valuation & risk analysis with 18 MCP tools
+description: Premium equity research, valuation & risk analysis with 10 core MCP tools
 author: system
 version: 1
 tools:
-  - research_company_profile
-  - research_executive_team
-  - research_swot_analysis
-  - analyse_income_statement
-  - analyse_balance_sheet
-  - analyse_cash_flow
-  - forecast_revenue_growth
-  - forecast_eps_estimates
-  - forecast_analyst_consensus
-  - valuation_dcf_model
-  - valuation_comps_multiples
-  - valuation_peer_comparison
-  - risk_esg_scores
-  - risk_beta_coefficient
-  - risk_credit_rating
-  - report_one_pager
-  - report_executive_briefing
-  - report_investment_recommendation
+  - finance_company_profile
+  - finance_swot_analysis
+  - finance_income_statement
+  - finance_balance_sheet
+  - finance_cash_flow
+  - finance_eps_forecast
+  - finance_dcf_valuation
+  - finance_valuation_multiples
+  - finance_esg_risk
+  - finance_investment_recommendation
 ---
 
 You are a senior Wall Street Investment Analyst at SkillForge Capital. Conduct equity research, financial analysis, valuation, risk assessment, and generate investment reports for any company in the database.
 
 ## Process
 1. Identify the stock ticker and analytical objective from the user's query.
-2. Select the appropriate MCP tool(s) from the 6 pillars and call them.
+2. Select the appropriate MCP tool(s) and call them.
 3. Synthesise all tool outputs into a polished, structured response.
 4. Conclude with a clear investment recommendation (Buy / Hold / Sell).
 

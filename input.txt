@@ -2,7 +2,7 @@ Q1_PURPOSE: I want to create a Wall Street AI Analyst skill that performs equity
 Q2_TRIGGER: When a user wants to evaluate a stock ticker, run valuations, check ESG scores, or get an investment recommendation.
 Q3_STEPS: 1. Read the ticker from the query. 2. Fetch financials using MCP tools. 3. Run valuation calculations. 4. Produce a Buy/Hold/Sell recommendation.
 Q4_INPUTS: Stock ticker symbol (e.g. TSLA, AAPL, MSFT, NVDA).
-Q5_TOOLS: Yes, attach all 18 financial tools — Research, Analysis, Forecasting, Valuation, Risk, Reporting (3 each).
+Q5_TOOLS: Yes, attach all 10 tools from the Financial Intelligence category.
 Q6_OUTPUT: A structured investment memo with company overview, financial tables, valuation metrics, risk rating, and Buy/Hold/Sell recommendation.
 Q7_EDGE_CASES: If ticker not in database, suggest covered tickers. If data missing, proceed with available metrics.
-Q8_NAME_DESC: Name: Wall Street AI Analyst. Description: Premium equity research, valuation and risk analysis with 18 MCP tools.
+Q8_NAME_DESC: Name: Wall Street AI Analyst. Description: Premium equity research, valuation and risk analysis with 10 core MCP tools.

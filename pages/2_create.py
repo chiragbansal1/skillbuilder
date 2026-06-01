@@ -38,12 +38,7 @@ with st.sidebar:
     # Categorize tools into clean expanders
     TOOL_GROUPS = {
         "Core Wiki & HR Tools": ["search_wiki", "lookup_contract", "get_employee_info"],
-        "Financial Research": [k for k in TOOL_REGISTRY if k.startswith("research_")],
-        "Financial Analysis": [k for k in TOOL_REGISTRY if k.startswith("analyse_")],
-        "Financial Forecasting": [k for k in TOOL_REGISTRY if k.startswith("forecast_")],
-        "Financial Valuation": [k for k in TOOL_REGISTRY if k.startswith("valuation_")],
-        "Financial Risk Tools": [k for k in TOOL_REGISTRY if k.startswith("risk_")],
-        "Financial Reporting": [k for k in TOOL_REGISTRY if k.startswith("report_")]
+        "Financial Intelligence": [k for k in TOOL_REGISTRY if k.startswith("finance_")]
     }
     
     for group_name, tools in TOOL_GROUPS.items():
@@ -186,7 +181,9 @@ def update_skill_in_db(skill_id: int, skill_content: str, pending_files: list[di
 st.session_state.setdefault("create_messages", [
     {"role": "assistant", "content": OPENING_MESSAGE}
 ])
-st.session_state.setdefault("create_llm_messages", [])
+st.session_state.setdefault("create_llm_messages", [
+    {"role": "assistant", "content": OPENING_MESSAGE}
+])
 st.session_state.setdefault("create_draft", None)
 st.session_state.setdefault("create_saved_id", None)
 st.session_state.setdefault("create_pending_files", [])
@@ -264,26 +261,19 @@ else:
 # ── Chat panel ────────────────────────────────────────────────────────────────
 
 with chat_col:
-    # Custom styled chat box
-    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
     for msg in st.session_state["create_messages"]:
-        bubble_class = "chat-bubble-user" if msg["role"] == "user" else "chat-bubble-assistant"
-        st.markdown(
-            f"""
-            <div class="{bubble_class}">
-                {msg["content"]}
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-    st.markdown("</div>", unsafe_allow_html=True)
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
 
     user_input = st.chat_input("Your answer…")
 
     if user_input:
         # Display user message immediately
         st.session_state["create_messages"].append({"role": "user", "content": user_input})
+        st.rerun()
 
+    # If the user has sent a message but the assistant hasn't replied yet
+    if len(st.session_state["create_messages"]) > 0 and st.session_state["create_messages"][-1]["role"] == "user":
         # Build LLM message history
         llm_msgs = [
             Message(role=m["role"], content=m["content"])
@@ -295,7 +285,8 @@ with chat_col:
             name for name in TOOL_REGISTRY
             if st.session_state.get(f"create_tool_{name}")
         ]
-        msg_content = user_input
+        last_user_input = st.session_state["create_messages"][-1]["content"]
+        msg_content = last_user_input
         if selected_tools:
             msg_content += (
                 f"\n\n[System note: the user has selected these tools for this skill: "
@@ -313,22 +304,20 @@ with chat_col:
             llm = get_llm(provider, model, key)
             system_prompt = load_skill_builder_prompt()
             
-            # Temporary UI container for streaming
-            placeholder = st.empty()
-            for chunk_type, data in llm.chat_stream(messages=llm_msgs, system=system_prompt):
-                if chunk_type == "chunk":
-                    reply += data
-                    placeholder.markdown(
-                        f"<div class='chat-bubble-assistant'>{reply}▌</div>", 
-                        unsafe_allow_html=True
-                    )
-                elif chunk_type == "done":
-                    placeholder.empty()
+            with st.chat_message("assistant"):
+                placeholder = st.empty()
+                for chunk_type, data in llm.chat_stream(messages=llm_msgs, system=system_prompt):
+                    if chunk_type == "chunk":
+                        reply += data
+                        placeholder.markdown(reply + "▌")
+                    elif chunk_type == "done":
+                        placeholder.markdown(reply)
         except Exception as e:
             reply = f"Sorry, I couldn't reach the AI: {e}\n\nCheck your LLM provider settings in the sidebar."
+            st.error(reply)
 
         # Persist messages
-        st.session_state["create_llm_messages"].append({"role": "user", "content": user_input})
+        st.session_state["create_llm_messages"].append({"role": "user", "content": last_user_input})
         st.session_state["create_llm_messages"].append({"role": "assistant", "content": reply})
         st.session_state["create_messages"].append({"role": "assistant", "content": reply})
 
