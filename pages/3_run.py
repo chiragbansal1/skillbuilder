@@ -91,22 +91,16 @@ st.markdown(
 )
 
 
-# ── Executor caching ─────────────────────────────────────────────────────────
+# ── Executor setup ───────────────────────────────────────────────────────────
 
 provider = st.session_state.get("llm_provider", "gemini")
 key = st.session_state.get("gemini_api_key" if provider == "gemini" else "anthropic_api_key", "")
 model = "gemini-2.5-flash" if provider == "gemini" else "claude-opus-4-7"
 
-@st.cache_resource
-def get_stack(provider_name, model_name, api_key):
+try:
     llm = make_llm_client()
     mcp = make_mcp_client()
     executor = make_executor(llm=llm, mcp=mcp)
-    return executor, mcp
-
-
-try:
-    executor, mcp = get_stack(provider, model, key)
 except Exception as e:
     st.error(f"Could not initialise the AI engine: {e}")
     st.stop()
@@ -115,6 +109,29 @@ except Exception as e:
 # ── Chat UI ──────────────────────────────────────────────────────────────────
 
 st.session_state.setdefault("run_messages", [])
+
+# Auto-generate welcome greeting if chat is empty (skill just loaded)
+if not st.session_state["run_messages"]:
+    skill_content = load_skill_content(selected_skill.id)
+    register_skill_tools(mcp, skill_content)
+    with st.spinner("Loading persona…"):
+        try:
+            from core.types import Message
+            greeting_prompt = (
+                "Introduce yourself briefly in 2-3 sentences based on your skill description. "
+                "Tell the user what you can help with and give 2-3 example prompts they can try. "
+                "Be concise and professional."
+            )
+            response = llm.chat(
+                messages=[Message(role="user", content=greeting_prompt)],
+                system=skill_content,
+            )
+            welcome = response.content or f"Hi! I'm **{selected_skill.name}**. How can I help you today?"
+        except Exception:
+            welcome = f"Hi! I'm **{selected_skill.name}**. {selected_skill.description}. How can I help you today?"
+    st.session_state["run_messages"] = [{"role": "assistant", "content": welcome, "tool_logs": []}]
+    st.rerun()
+
 
 # Display existing chat messages
 for msg in st.session_state["run_messages"]:

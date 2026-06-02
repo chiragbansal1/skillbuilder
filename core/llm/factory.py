@@ -42,10 +42,12 @@ def make_llm_client(config_path: str | Path = "config.yaml") -> LLMClient:
     anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
     
     try:
-        if "gemini_api_key" in st.session_state and st.session_state["gemini_api_key"]:
-            gemini_key = st.session_state["gemini_api_key"]
-        if "anthropic_api_key" in st.session_state and st.session_state["anthropic_api_key"]:
-            anthropic_key = st.session_state["anthropic_api_key"]
+        sess_gemini = st.session_state.get("gemini_api_key", "")
+        sess_anthropic = st.session_state.get("anthropic_api_key", "")
+        if sess_gemini:  # Only override if user actually typed a key
+            gemini_key = sess_gemini
+        if sess_anthropic:
+            anthropic_key = sess_anthropic
     except Exception:
         pass
 
