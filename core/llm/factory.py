@@ -7,15 +7,67 @@ import yaml
 from pathlib import Path
 from core.llm.base import LLMClient
 from core.llm.claude import ClaudeClient
+from core.llm.gemini import GeminiClient
 from core.llm.firm_internal import FirmInternalClient
 
 
 def make_llm_client(config_path: str | Path = "config.yaml") -> LLMClient:
-    cfg = yaml.safe_load(Path(config_path).read_text())["llm"]
-    provider = cfg["provider"]
+    import os
+    import streamlit as st
+    
+    # Default settings
+    try:
+        cfg = yaml.safe_load(Path(config_path).read_text())["llm"]
+    except Exception:
+        cfg = {"provider": "gemini", "model": "gemini-2.5-flash"}
+        
+    provider = cfg.get("provider", "gemini")
+    model = cfg.get("model", "gemini-2.5-flash")
+    
+    # Overrides from streamlit session state
+    try:
+        if "llm_provider" in st.session_state:
+            provider = st.session_state["llm_provider"]
+            if provider == "gemini":
+                model = "gemini-2.5-flash"
+            elif provider == "claude":
+                model = "claude-opus-4-7"
+            else:
+                model = "mock-default"
+    except Exception:
+        pass
+        
+    # Keys checking
+    gemini_key = os.environ.get("GEMINI_API_KEY")
+    anthropic_key = os.environ.get("ANTHROPIC_API_KEY")
+    
+    try:
+        sess_gemini = st.session_state.get("gemini_api_key", "")
+        sess_anthropic = st.session_state.get("anthropic_api_key", "")
+        if sess_gemini:  # Only override if user actually typed a key
+            gemini_key = sess_gemini
+        if sess_anthropic:
+            anthropic_key = sess_anthropic
+    except Exception:
+        pass
 
-    if provider == "claude":
-        return ClaudeClient(model=cfg.get("model", "claude-opus-4-7"))
+    # If Claude is selected but no API key exists, automatically fall back to Mock LLM
+    if provider == "claude" and not anthropic_key:
+        from core.llm.mock import MockLLMClient
+        return MockLLMClient(model="mock-claude-fallback")
+
+    # If Gemini is selected but no API key exists, automatically fall back to Mock LLM
+    if provider == "gemini" and not gemini_key:
+        from core.llm.mock import MockLLMClient
+        return MockLLMClient(model="mock-gemini-fallback")
+
+    if provider == "mock":
+        from core.llm.mock import MockLLMClient
+        return MockLLMClient(model=model)
+    elif provider == "claude":
+        return ClaudeClient(model=model, api_key=anthropic_key)
+    elif provider == "gemini":
+        return GeminiClient(model=model, api_key=gemini_key)
     elif provider == "firm_internal":
         return FirmInternalClient(
             model=cfg.get("model", "firm-default"),

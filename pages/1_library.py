@@ -4,26 +4,23 @@ Library page — browse, run, edit, and delete skills.
 import streamlit as st
 from core.storage.database import get_session
 from core.storage.crud import list_skills, delete_skill
+from core.ui import render_sidebar
 
 st.set_page_config(page_title="Library — SkillForge", page_icon="📚", layout="wide")
 
-with st.sidebar:
-    st.title("⚡ SkillForge")
-    st.divider()
-    from shared import FAKE_USERS
-    st.session_state.setdefault("current_user", FAKE_USERS[0])
-    st.session_state["current_user"] = st.selectbox(
-        "Signed in as",
-        FAKE_USERS,
-        index=FAKE_USERS.index(st.session_state["current_user"]),
-    )
+# Render custom premium sidebar
+render_sidebar("library")
 
-st.title("📚 Skill Library")
-st.caption("Browse and run skills built by your colleagues.")
+st.markdown("<h1 class='main-header'>📚 Skill Library</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='margin-top: -1.2rem; color: #94a3b8 !important; font-weight: 400 !important; font-size: 1.1rem; margin-bottom: 2rem;'>Browse and deploy custom-built AI skills & personas across the organization.</h3>", unsafe_allow_html=True)
 
 session = get_session()
 try:
-    skills = list_skills(session)
+    # Include hidden=False to only show active skills
+    skills = list_skills(session, include_hidden=False)
+except Exception as e:
+    st.error(f"Error fetching library: {e}")
+    skills = []
 finally:
     session.close()
 
@@ -31,51 +28,55 @@ if not skills:
     st.info("No skills yet — go to **Create** to build the first one.")
     st.stop()
 
-st.divider()
+# Render cards in a 2-column layout
+cols = st.columns(2, gap="large")
 
-for skill in skills:
-    with st.container():
-        col_info, col_run, col_edit, col_delete = st.columns([5, 1, 1, 1])
-
-        with col_info:
-            st.markdown(f"### {skill.name}")
-            st.caption(f"by {skill.author} · version {skill.version}")
-            st.write(skill.description)
-
-        with col_run:
-            st.write("")
-            st.write("")
-            if st.button("▶ Run", key=f"run_{skill.id}", use_container_width=True):
+for i, skill in enumerate(skills):
+    col = cols[i % 2]
+    
+    # Construct initials for avatar
+    words = skill.name.split()
+    initials = "".join([w[0].upper() for w in words[:2]])
+    
+    # Generate badges
+    badges_html = f"""<div style="display: flex; gap: 0.5rem; margin: 0.5rem 0 1rem 0;"><span class="custom-badge badge-primary">v{skill.version}</span><span class="custom-badge badge-success">Author: {skill.author}</span>{"<span class='custom-badge badge-secondary'>MCP Powered</span>" if "tools:" in (skill.content or "") else ""}</div>"""
+    
+    with col:
+        html_content = f"""<div class="glass-card"><div style="display: flex; align-items: center; margin-bottom: 0.75rem;"><div class="persona-avatar">{initials}</div><div><h4 style="margin: 0;">{skill.name}</h4><p style="margin: 0; font-size: 0.8rem; color: #64748b;">Created by {skill.author}</p></div></div>{badges_html}<p style="min-height: 50px; margin: 0.5rem 0 0 0;">{skill.description}</p></div>"""
+        st.markdown(html_content, unsafe_allow_html=True)
+        
+        # Action buttons directly below the card
+        c_run, c_edit, c_del = st.columns([2, 1, 1])
+        
+        with c_run:
+            if st.button("▶ Run Skill", key=f"run_{skill.id}", use_container_width=True):
                 st.session_state["run_skill_id"] = skill.id
                 st.session_state["run_skill_name"] = skill.name
+                st.session_state.pop("run_messages", None)
                 st.switch_page("pages/3_run.py")
-
-        with col_edit:
-            st.write("")
-            st.write("")
-            if st.button("✏️ Edit", key=f"edit_{skill.id}", use_container_width=True):
+                
+        with c_edit:
+            if st.button("✏️ Edit", key=f"edit_{skill.id}", use_container_width=True, type="secondary" if hasattr(st, "button") else "primary"):
                 # Clear any previous create/edit session state
                 for key in ["create_messages", "create_llm_messages", "create_draft",
                             "create_saved_id", "create_pending_files", "create_testing"]:
                     st.session_state.pop(key, None)
                 st.session_state["edit_skill_id"] = skill.id
                 st.switch_page("pages/2_create.py")
-
-        with col_delete:
-            st.write("")
-            st.write("")
+                
+        with c_del:
             if st.session_state.get(f"confirm_delete_{skill.id}"):
                 if st.button("Sure?", key=f"confirm_{skill.id}", use_container_width=True, type="primary"):
-                    session = get_session()
+                    db_session = get_session()
                     try:
-                        delete_skill(session, skill.id)
+                        delete_skill(db_session, skill.id)
                     finally:
-                        session.close()
+                        db_session.close()
                     st.session_state.pop(f"confirm_delete_{skill.id}", None)
                     st.rerun()
             else:
-                if st.button("🗑 Delete", key=f"delete_{skill.id}", use_container_width=True):
+                if st.button("🗑 Del", key=f"delete_{skill.id}", use_container_width=True, type="secondary" if hasattr(st, "button") else "primary"):
                     st.session_state[f"confirm_delete_{skill.id}"] = True
                     st.rerun()
-
-        st.divider()
+        
+        st.write("") # Spacer

@@ -20,29 +20,60 @@ from core.storage.database import get_session
 from core.storage.crud import create_skill, add_skill_file, get_skill_by_id, get_skill_files, update_skill, delete_skill_files
 from core.files import extract_text, file_type_label
 from core.mcp.demo_tools import register_skill_tools, TOOL_REGISTRY
+from core.ui import render_sidebar
 
-# ── Page config & sidebar ────────────────────────────────────────────────────
+# ── Page config ──────────────────────────────────────────────────────────────
 
 st.set_page_config(page_title="Create — SkillForge", page_icon="✨", layout="wide")
 
+# ── Pre-seed tool checkboxes before sidebar renders (edit mode) ───────────────
+# Streamlit forbids setting session_state keys that are already bound to a widget.
+# We must set tool checkbox state BEFORE the sidebar checkboxes are instantiated.
+_edit_skill_id_preseed = st.session_state.get("edit_skill_id")
+if _edit_skill_id_preseed:
+    _preseed_session = get_session()
+    try:
+        _preseed_skill = get_skill_by_id(_preseed_session, _edit_skill_id_preseed)
+    finally:
+        _preseed_session.close()
+    if _preseed_skill and st.session_state.get("create_draft") is None:
+        # Parse tools from frontmatter and pre-seed checkboxes
+        import re as _re, yaml as _yaml
+        _fm_match = _re.match(r"^---\n(.*?)\n---", _preseed_skill.content or "", _re.DOTALL)
+        if _fm_match:
+            try:
+                _fm = _yaml.safe_load(_fm_match.group(1)) or {}
+                for _tool_name in _fm.get("tools", []):
+                    st.session_state.setdefault(f"create_tool_{_tool_name}", True)
+            except Exception:
+                pass
+
+# Render premium sidebar (navigation, user selector, personas)
+render_sidebar("create")
+
+# Additional create-specific sidebar controls
 with st.sidebar:
-    st.title("⚡ SkillForge")
-    st.divider()
-    st.session_state.setdefault("current_user", FAKE_USERS[0])
-    st.session_state["current_user"] = st.selectbox(
-        "Signed in as",
-        FAKE_USERS,
-        index=FAKE_USERS.index(st.session_state["current_user"]),
-    )
     st.divider()
     st.markdown("**🔧 Attach tools**")
     st.caption("Select tools this skill should be able to call. You can tell the AI any specific instructions for each tool during the interview.")
-    for tool_name, tool in TOOL_REGISTRY.items():
-        st.checkbox(
-            tool_name,
-            help=tool["description"],
-            key=f"create_tool_{tool_name}",
-        )
+    
+    # Categorize tools into clean expanders
+    TOOL_GROUPS = {
+        "Core Wiki & HR Tools": ["search_wiki", "lookup_contract", "get_employee_info"],
+        "Financial Intelligence": [k for k in TOOL_REGISTRY if k.startswith("finance_")]
+    }
+    
+    for group_name, tools in TOOL_GROUPS.items():
+        if tools: # Only render if group is not empty
+            with st.expander(f"📦 {group_name}", expanded=False):
+                for tool_name in tools:
+                    if tool_name in TOOL_REGISTRY:
+                        st.checkbox(
+                            tool_name,
+                            help=TOOL_REGISTRY[tool_name]["description"],
+                            key=f"create_tool_{tool_name}",
+                        )
+                        
     st.divider()
     st.markdown("**📎 Attach reference files**")
     st.caption("Upload docs, code, or data the skill should know about.")
@@ -59,7 +90,7 @@ with st.sidebar:
             if uf.name not in existing_names:
                 from core.files import extract_text, file_type_label
                 text = extract_text(uf.name, uf.read())
-                st.session_state["create_pending_files"].append({
+                st.session_state.setdefault("create_pending_files", []).append({
                     "filename": uf.name,
                     "file_type": file_type_label(uf.name),
                     "content": text,
@@ -69,7 +100,7 @@ with st.sidebar:
         for f in st.session_state["create_pending_files"]:
             st.caption(f"📎 {f['filename']}")
     st.divider()
-    if st.button("🗑 Start over", use_container_width=True):
+    if st.button("🗑 Start over", use_container_width=True, type="secondary" if hasattr(st, "button") else "primary"):
         for key in ["create_messages", "create_llm_messages", "create_draft",
                     "create_saved_id", "create_pending_files", "create_testing",
                     "edit_skill_id"]:
@@ -89,12 +120,12 @@ OPENING_MESSAGE = (
 
 
 @st.cache_resource
-def get_llm():
+def get_llm(provider, model, key):
     return make_llm_client()
 
 
 @st.cache_resource
-def get_executor_stack():
+def get_executor_stack(provider, model, key):
     llm = make_llm_client()
     mcp = make_mcp_client()
     executor = make_executor(llm=llm, mcp=mcp)
@@ -167,19 +198,14 @@ def update_skill_in_db(skill_id: int, skill_content: str, pending_files: list[di
         session.close()
 
 
-def run_test(skill_content: str, test_message: str):
-    """Yield events from a quick test run of the drafted skill."""
-    executor, mcp = get_executor_stack()
-    register_skill_tools(mcp, skill_content)
-    yield from executor.run(skill_content=skill_content, user_message=test_message)
-
-
 # ── Session state defaults ────────────────────────────────────────────────────
 
 st.session_state.setdefault("create_messages", [
     {"role": "assistant", "content": OPENING_MESSAGE}
 ])
-st.session_state.setdefault("create_llm_messages", [])
+st.session_state.setdefault("create_llm_messages", [
+    {"role": "assistant", "content": OPENING_MESSAGE}
+])
 st.session_state.setdefault("create_draft", None)
 st.session_state.setdefault("create_saved_id", None)
 st.session_state.setdefault("create_pending_files", [])
@@ -219,10 +245,7 @@ if edit_skill_id and st.session_state["create_draft"] is None:
             for f in existing_files
         ]
 
-        # Pre-check tool checkboxes based on existing frontmatter
-        meta = extract_frontmatter(existing.content)
-        for tool_name in meta.get("tools", []):
-            st.session_state[f"create_tool_{tool_name}"] = True
+        # Tool checkboxes are pre-seeded at the top of the file before sidebar renders.
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
@@ -232,7 +255,7 @@ is_edit_mode = bool(edit_skill_id)
 if is_edit_mode:
     col_title, col_new = st.columns([5, 2])
     with col_title:
-        st.title("✏️ Edit Skill")
+        st.markdown("<h1 class='main-header'>✏️ Edit Skill</h1>", unsafe_allow_html=True)
         st.caption("Update the skill using the chat below.")
     with col_new:
         st.write("")
@@ -242,8 +265,8 @@ if is_edit_mode:
                 st.session_state.pop(key, None)
             st.rerun()
 else:
-    st.title("✨ Create a Skill")
-    st.caption("Answer a few questions and the AI will write the skill for you.")
+    st.markdown("<h1 class='main-header'>✨ Create a Skill</h1>", unsafe_allow_html=True)
+    st.markdown("<h3 style='margin-top: -1.2rem; color: #94a3b8 !important; font-weight: 400 !important; font-size: 1.1rem; margin-bottom: 2rem;'>Answer a few questions and the AI will write the skill frontmatter and prompt logic.</h3>", unsafe_allow_html=True)
 
 draft = st.session_state["create_draft"]
 
@@ -266,9 +289,10 @@ with chat_col:
     if user_input:
         # Display user message immediately
         st.session_state["create_messages"].append({"role": "user", "content": user_input})
-        with st.chat_message("user"):
-            st.markdown(user_input)
+        st.rerun()
 
+    # If the user has sent a message but the assistant hasn't replied yet
+    if len(st.session_state["create_messages"]) > 0 and st.session_state["create_messages"][-1]["role"] == "user":
         # Build LLM message history
         llm_msgs = [
             Message(role=m["role"], content=m["content"])
@@ -280,7 +304,8 @@ with chat_col:
             name for name in TOOL_REGISTRY
             if st.session_state.get(f"create_tool_{name}")
         ]
-        msg_content = user_input
+        last_user_input = st.session_state["create_messages"][-1]["content"]
+        msg_content = last_user_input
         if selected_tools:
             msg_content += (
                 f"\n\n[System note: the user has selected these tools for this skill: "
@@ -292,8 +317,12 @@ with chat_col:
         # Call LLM with streaming
         reply = ""
         try:
-            llm = get_llm()
+            provider = st.session_state.get("llm_provider", "gemini")
+            key = st.session_state.get("gemini_api_key" if provider == "gemini" else "anthropic_api_key", "")
+            model = "gemini-2.5-flash" if provider == "gemini" else "claude-opus-4-7"
+            llm = get_llm(provider, model, key)
             system_prompt = load_skill_builder_prompt()
+            
             with st.chat_message("assistant"):
                 placeholder = st.empty()
                 for chunk_type, data in llm.chat_stream(messages=llm_msgs, system=system_prompt):
@@ -303,12 +332,11 @@ with chat_col:
                     elif chunk_type == "done":
                         placeholder.markdown(reply)
         except Exception as e:
-            reply = f"Sorry, I couldn't reach the AI: {e}\n\nMake sure your `.env` has a valid `ANTHROPIC_API_KEY`."
-            with st.chat_message("assistant"):
-                st.markdown(reply)
+            reply = f"Sorry, I couldn't reach the AI: {e}\n\nCheck your LLM provider settings in the sidebar."
+            st.error(reply)
 
         # Persist messages
-        st.session_state["create_llm_messages"].append({"role": "user", "content": user_input})
+        st.session_state["create_llm_messages"].append({"role": "user", "content": last_user_input})
         st.session_state["create_llm_messages"].append({"role": "assistant", "content": reply})
         st.session_state["create_messages"].append({"role": "assistant", "content": reply})
 
@@ -328,7 +356,7 @@ if draft and preview_col:
         meta = extract_frontmatter(draft)
         skill_name = meta.get("name", "New Skill")
 
-        st.subheader(f"📄 {skill_name}")
+        st.markdown(f"### 📄 {skill_name}")
         st.caption(meta.get("description", ""))
         st.divider()
 

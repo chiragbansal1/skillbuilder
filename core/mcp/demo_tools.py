@@ -249,6 +249,11 @@ TOOL_REGISTRY: dict[str, dict] = {
     },
 }
 
+# Merge the programmatically generated 90 financial tools
+from core.mcp.finance_tools import FINANCE_TOOL_REGISTRY
+TOOL_REGISTRY.update(FINANCE_TOOL_REGISTRY)
+
+
 
 # ── Helper ────────────────────────────────────────────────────────────────────
 
