@@ -26,6 +26,28 @@ from core.ui import render_sidebar
 
 st.set_page_config(page_title="Create — SkillForge", page_icon="✨", layout="wide")
 
+# ── Pre-seed tool checkboxes before sidebar renders (edit mode) ───────────────
+# Streamlit forbids setting session_state keys that are already bound to a widget.
+# We must set tool checkbox state BEFORE the sidebar checkboxes are instantiated.
+_edit_skill_id_preseed = st.session_state.get("edit_skill_id")
+if _edit_skill_id_preseed:
+    _preseed_session = get_session()
+    try:
+        _preseed_skill = get_skill_by_id(_preseed_session, _edit_skill_id_preseed)
+    finally:
+        _preseed_session.close()
+    if _preseed_skill and st.session_state.get("create_draft") is None:
+        # Parse tools from frontmatter and pre-seed checkboxes
+        import re as _re, yaml as _yaml
+        _fm_match = _re.match(r"^---\n(.*?)\n---", _preseed_skill.content or "", _re.DOTALL)
+        if _fm_match:
+            try:
+                _fm = _yaml.safe_load(_fm_match.group(1)) or {}
+                for _tool_name in _fm.get("tools", []):
+                    st.session_state.setdefault(f"create_tool_{_tool_name}", True)
+            except Exception:
+                pass
+
 # Render premium sidebar (navigation, user selector, personas)
 render_sidebar("create")
 
@@ -223,10 +245,7 @@ if edit_skill_id and st.session_state["create_draft"] is None:
             for f in existing_files
         ]
 
-        # Pre-check tool checkboxes based on existing frontmatter
-        meta = extract_frontmatter(existing.content)
-        for tool_name in meta.get("tools", []):
-            st.session_state[f"create_tool_{tool_name}"] = True
+        # Tool checkboxes are pre-seeded at the top of the file before sidebar renders.
 
 
 # ── Layout ────────────────────────────────────────────────────────────────────
