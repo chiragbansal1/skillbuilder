@@ -90,6 +90,11 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+# ── Active SKILL.md preview ──────────────────────────────────────────────────
+
+_preview_content = load_skill_content(selected_skill.id)
+with st.expander("📄 View active SKILL.md", expanded=False):
+    st.code(_preview_content, language="markdown")
 
 # ── Executor setup ───────────────────────────────────────────────────────────
 
